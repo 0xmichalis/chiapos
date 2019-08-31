@@ -27,7 +27,7 @@ const (
 	// Number of buckets to use for SortOnDisk.
 	kNumSortBuckets = 16
 
-	// During backprop and compress, the write pointer is ahead of the read pointer
+	// During back propagation and compress, the write pointer is ahead of the read pointer
 	// Note that the large the offset, the higher these values must be
 	kReadMinusWrite      = 2048
 	kCachedPositionsSize = 8192
@@ -53,11 +53,11 @@ const (
 func CreatePlotDisk(filename string, k int, memo, id []byte) error {
 	fmt.Printf("Starting plotting progress into file %s\n", filename)
 
-	// These variables are used in the WriteParkToFile method. They are preallocatted here
+	// These variables are used in the WriteParkToFile method. They are pre-allocated here
 	// to save time.
-	first_line_point_bytes := CalculateLinePointSize(k)
-	park_stubs_bytes := CalculateStubsSize(k)
-	park_deltas_bytes := CalculateMaxDeltasSize(k, 1)
+	// first_line_point_bytes := CalculateLinePointSize(k)
+	// park_stubs_bytes := CalculateStubsSize(k)
+	// park_deltas_bytes := CalculateMaxDeltasSize(k, 1)
 
 	if len(id) != kIdLen {
 		return fmt.Errorf("invalid id length: %d", len(id))
@@ -70,23 +70,48 @@ func CreatePlotDisk(filename string, k int, memo, id []byte) error {
 }
 
 func CalculateLinePointSize(k int) int {
-	return byteAlign(2*k) / 8
+	return byteAlign(2 * k)
 }
 
 func byteAlign(numBits int) int {
-	return (numBits + (8-(numBits%8))%8)
+	return (numBits + (8-(numBits%8))%8) / 8
 }
 
 func CalculateStubsSize(k int) int {
-	return byteAlign((kEntriesPerPark-1)*(k-kStubMinusBits)) / 8
+	return byteAlign((kEntriesPerPark - 1) * (k - kStubMinusBits))
 }
 
 // This is the full size of the deltas section in a park. However, it will not be fully filled
-func CalculateMaxDeltasSize(k, table_index int) int {
-	if table_index == 1 {
-		return byteAlign((kEntriesPerPark-1)*kMaxAverageDeltaTable1) / 8
+func CalculateMaxDeltasSize(k, tableIndex int) int {
+	var bits float64
+	if tableIndex == 1 {
+		bits = (kEntriesPerPark - 1) * kMaxAverageDeltaTable1
+	} else {
+		bits = (kEntriesPerPark - 1) * kMaxAverageDelta
 	}
-	return byteAlign((kEntriesPerPark-1)*kMaxAverageDelta) / 8
+	return byteAlign(int(bits))
+}
+
+// This is Phase 1, or forward propagation. During this phase, all of the 7 tables,
+// and f functions, are evaluated. The result is an intermediate plot file, that is
+// several times larger than what the final file will be, but that has all of the
+// proofs of space in it. First, F1 is computed, which is special since it uses
+// AES256, and each encryption provides multiple output values. Then, the rest of the
+// f functions are computed, and a sort on disk happens for each table.
+func WritePlotFile(filename string, k int, memo, id []byte) error {
+	file, err := os.Create(filename)
+	if err != nil {
+		return err
+	}
+	if err := WriteHeader(file, k, memo, id); err != nil {
+		return err
+	}
+
+	fmt.Println("Computing table 1...")
+	//now := time.Now()
+	//f1 := NewF1(k, id)
+
+	return nil
 }
 
 // WriteHeader writes the plot file header to a file
@@ -124,4 +149,3 @@ func WriteHeader(file *os.File, k int, memo, id []byte) error {
 	}
 	return nil
 }
-

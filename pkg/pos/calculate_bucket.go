@@ -1,11 +1,10 @@
 package pos
 
-import "math"
-
-type F1 struct {
-	k      int
-	aesKey [32]byte
-}
+import (
+	"crypto/aes"
+	"crypto/cipher"
+	"math"
+)
 
 // AES block size
 const kBlockSizeBits = 128
@@ -37,14 +36,39 @@ var kVectorLens = map[int]int{
 	8: 0,
 }
 
+type F1 struct {
+	k   int
+	key cipher.Block
+}
+
+func NewF1(k int, key []byte) (*F1, error) {
+	f1 := &F1{
+		k: k,
+	}
+
+	aesKey := make([]byte, 32)
+	// First byte is 1, the index of this table
+	aesKey[0] = 1
+	copy(aesKey[1:], key)
+
+	block, err := aes.NewCipher(aesKey)
+	if err != nil {
+		return nil, err
+	}
+	f1.key = block
+
+	precomputeShifts()
+
+	return f1, nil
+}
+
 // Precomputed shifts that specify which entries match with which other entries
 // in adjacent buckets.
-var matchingShiftsC = make([][]int, 2)
+var matchingShiftsC [2][kC]int
 
 // Performs the pre-computation of shifts.
 func precomputeShifts() {
 	for parity := 0; parity < 2; parity++ {
-		matchingShiftsC[parity] = make([]int, kC)
 		for r := 0; r < kExtraBitsPow; r++ {
 			v := int(math.Pow(float64(2*r+parity), 2)) % kC
 			matchingShiftsC[parity][r] = v
