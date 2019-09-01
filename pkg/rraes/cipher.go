@@ -26,15 +26,10 @@ func (k KeySizeError) Error() string {
 
 // NewCipher creates and returns a new cipher.Block.
 // The key argument should be the AES key,
-// either 16, 24, or 32 bytes to select
-// AES-128, AES-192, or AES-256.
+// 16 bytes long, to select AES-128.
 func NewCipher(key []byte) (cipher.Block, error) {
-	k := len(key)
-	switch k {
-	default:
+	if k := len(key); k != 16 {
 		return nil, KeySizeError(k)
-	case 16, 24, 32:
-		break
 	}
 	return newCipher(key)
 }
