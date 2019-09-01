@@ -39,39 +39,12 @@ func NewCipher(key []byte) (cipher.Block, error) {
 	return newCipher(key)
 }
 
-// newCipherGeneric creates and returns a new cipher.Block
-// implemented in pure Go.
-func newCipherGeneric(key []byte) (cipher.Block, error) {
-	n := len(key) + 28
-	c := aesCipher{make([]uint32, n), make([]uint32, n)}
-	expandKeyGo(key, c.enc, c.dec)
-	return &c, nil
-}
-
 func (c *aesCipher) BlockSize() int { return BlockSize }
 
 func (c *aesCipher) Encrypt(dst, src []byte) {
-	if len(src) < BlockSize {
-		panic("crypto/aes: input not full block")
-	}
-	if len(dst) < BlockSize {
-		panic("crypto/aes: output not full block")
-	}
-	if InexactOverlap(dst[:BlockSize], src[:BlockSize]) {
-		panic("crypto/aes: invalid buffer overlap")
-	}
-	encryptBlockGo(c.enc, dst, src)
+	panic("rraes: golang encryption not implemented")
 }
 
 func (c *aesCipher) Decrypt(dst, src []byte) {
-	if len(src) < BlockSize {
-		panic("crypto/aes: input not full block")
-	}
-	if len(dst) < BlockSize {
-		panic("crypto/aes: output not full block")
-	}
-	if InexactOverlap(dst[:BlockSize], src[:BlockSize]) {
-		panic("crypto/aes: invalid buffer overlap")
-	}
-	decryptBlockGo(c.dec, dst, src)
+	panic("rraes: decryption not implemented")
 }
