@@ -43,7 +43,7 @@ func TestConcat(t *testing.T) {
 	tests := []struct {
 		name string
 		x, y *big.Int
-		k    uint
+		k    uint64
 		want *big.Int
 	}{
 		{
@@ -67,7 +67,7 @@ func TestTrunc(t *testing.T) {
 	tests := []struct {
 		name    string
 		x       *big.Int
-		a, b, k uint
+		a, b, k uint64
 		want    *big.Int
 	}{
 		{
