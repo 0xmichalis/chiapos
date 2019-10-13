@@ -3,28 +3,34 @@ package pos
 import (
 	"crypto/aes"
 	"crypto/cipher"
+	"fmt"
 	"math"
 	"math/big"
 
 	"github.com/kargakis/gochia/pkg/utils"
 )
 
-// AES block size
-const kBlockSizeBits = aes.BlockSize * 8
+const (
+	// AES block size
+	kBlockSizeBits = aes.BlockSize * 8
 
-// Extra bits of output from the f functions. Instead of being a function from k -> k bits,
-// it's a function from k -> k + kExtraBits bits. This allows less collisions in matches.
-// Refer to the paper for mathematical motivations.
-const kExtraBits = 5
+	// Extra bits of output from the f functions. Instead of being a function from k -> k bits,
+	// it's a function from k -> k + kExtraBits bits. This allows less collisions in matches.
+	// Refer to the paper for mathematical motivations.
+	kExtraBits = 5
 
-// Convenience variable
-const kExtraBitsPow = 1 << kExtraBits
+	// Convenience variable
+	kExtraBitsPow = 1 << kExtraBits
 
-// B and C groups which constitute a bucket, or BC group. These groups determine how
-// elements match with each other. Two elements must be in adjacent buckets to match.
-const kB = 60
-const kC int = 509
-const kBC = kB * kC
+	// B and C groups which constitute a bucket, or BC group. These groups determine how
+	// elements match with each other. Two elements must be in adjacent buckets to match.
+	kB      = 60
+	kC  int = 509
+	kBC     = kB * kC
+
+	kMin = 33
+	kMax = 59
+)
 
 // This (times k) is the length of the metadata that must be kept for each entry. For example,
 // for a table 4 entry, we must keep 4k additional bits for each entry, which is used to
@@ -45,6 +51,10 @@ type F1 struct {
 }
 
 func NewF1(k uint64, key []byte) (*F1, error) {
+	if k < kMin || k > kMax {
+		return nil, fmt.Errorf("invalid k: %d, valid range: %d - %d", k, kMin, kMax)
+	}
+
 	f1 := &F1{
 		k: k,
 	}
