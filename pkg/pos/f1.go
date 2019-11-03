@@ -4,7 +4,6 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"fmt"
-	"math"
 	"math/big"
 
 	"github.com/kargakis/gochia/pkg/utils"
@@ -70,8 +69,6 @@ func NewF1(k uint64, key []byte) (*F1, error) {
 	}
 	f1.key = block
 
-	precomputeShifts()
-
 	return f1, nil
 }
 
@@ -79,7 +76,7 @@ func NewF1(k uint64, key []byte) (*F1, error) {
 func (f *F1) Calculate(x uint64) uint64 {
 	q := big.NewInt(0)
 	r := big.NewInt(0)
-	q, r = q.DivMod(big.NewInt(int64(x*f.k)), big.NewInt(kBlockSizeBits), r)
+	q, r = q.DivMod(big.NewInt(0).SetUint64(x*f.k), big.NewInt(kBlockSizeBits), r)
 
 	var qCipher []byte
 	f.key.Encrypt(qCipher, q.Bytes())
@@ -93,23 +90,9 @@ func (f *F1) Calculate(x uint64) uint64 {
 		f.key.Encrypt(q1Cipher, q.Add(q, big.NewInt(1)).Bytes())
 		part2 := big.NewInt(0).SetBytes(q1Cipher)
 		part2 = utils.Trunc(part2, 0, r.Uint64()+f.k-kBlockSizeBits, f.k)
-		res = utils.Concat(part1, part2, f.k)
+		res = utils.Concat(f.k, part1.Uint64(), part2.Uint64())
 	}
 
-	res = utils.Concat(res, big.NewInt(int64(x%paramM)), f.k)
+	res = utils.Concat(f.k, res.Uint64(), x%paramM)
 	return res.Uint64()
-}
-
-// Precomputed shifts that specify which entries match with which other entries
-// in adjacent buckets.
-var matchingShiftsC [2][kC]int
-
-// Performs the pre-computation of shifts.
-func precomputeShifts() {
-	for parity := 0; parity < 2; parity++ {
-		for r := 0; r < kExtraBitsPow; r++ {
-			v := int(math.Pow(float64(2*r+parity), 2)) % kC
-			matchingShiftsC[parity][r] = v
-		}
-	}
 }
