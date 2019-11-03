@@ -200,7 +200,7 @@ func At(x, y, k uint64, t int, c cipher.Block) (*uint64, error) {
 	}
 
 	// need to return the most significant k+paramEXT bits
-	res := big.NewInt(0).SetBytes(cipher[:k+5])
-	r := res.Uint64()
+	res := big.NewInt(0).SetBytes(cipher)
+	r := Trunc(res, 0, k+5, k).Uint64()
 	return &r, nil
 }
