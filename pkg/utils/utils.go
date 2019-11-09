@@ -158,16 +158,16 @@ func At(x, y, k uint64, t int, c cipher.Block) (*uint64, error) {
 	size := 2 * int(k) * *collaSize
 
 	// main logic
-	var cipher []byte
+	var cipherText []byte
 	switch {
 	case 0 <= size && size <= 128:
 		plaintext := Concat(k, x, y)
-		c.Encrypt(cipher, plaintext.Bytes())
+		c.Encrypt(cipherText, plaintext.Bytes())
 
 	case 129 <= size && size <= 256:
-		c.Encrypt(cipher, xBig.Bytes())
-		tmp := big.NewInt(0).SetBytes(cipher)
-		c.Encrypt(cipher, tmp.Xor(tmp, yBig).Bytes())
+		c.Encrypt(cipherText, xBig.Bytes())
+		tmp := big.NewInt(0).SetBytes(cipherText)
+		c.Encrypt(cipherText, tmp.Xor(tmp, yBig).Bytes())
 
 	case 257 <= size && size <= 384:
 		var cipherConcat []byte
@@ -183,7 +183,7 @@ func At(x, y, k uint64, t int, c cipher.Block) (*uint64, error) {
 		cxBig := big.NewInt(0).SetBytes(cipherXHigh)
 
 		ccBig.Xor(ccBig, cyBig).Xor(ccBig, cxBig)
-		c.Encrypt(cipher, ccBig.Bytes())
+		c.Encrypt(cipherText, ccBig.Bytes())
 
 	case 385 <= size && size <= 512:
 		var tmp []byte
@@ -196,11 +196,11 @@ func At(x, y, k uint64, t int, c cipher.Block) (*uint64, error) {
 		c.Encrypt(cipherYHigh, yHigh.Bytes())
 		cyBig := big.NewInt(0).SetBytes(cipherYHigh)
 
-		c.Encrypt(cipher, tmpBig.Xor(tmpBig, cyBig).Xor(tmpBig, yLow).Bytes())
+		c.Encrypt(cipherText, tmpBig.Xor(tmpBig, cyBig).Xor(tmpBig, yLow).Bytes())
 	}
 
 	// need to return the most significant k+paramEXT bits
-	res := big.NewInt(0).SetBytes(cipher)
+	res := big.NewInt(0).SetBytes(cipherText)
 	r := Trunc(res, 0, k+5, k).Uint64()
 	return &r, nil
 }
