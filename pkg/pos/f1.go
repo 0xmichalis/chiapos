@@ -56,9 +56,7 @@ func NewF1(k uint64, key []byte) (*F1, error) {
 	}
 
 	aesKey := make([]byte, 32)
-	// First byte is 1, the index of this table
-	aesKey[0] = 1
-	copy(aesKey[1:], key)
+	copy(aesKey[:], key)
 
 	block, err := aes.NewCipher(aesKey)
 	if err != nil {
@@ -71,24 +69,24 @@ func NewF1(k uint64, key []byte) (*F1, error) {
 
 // Calculate expects an input of 2^k bits
 func (f *F1) Calculate(x uint64) uint64 {
-	q := big.NewInt(0)
-	r := big.NewInt(0)
-	q, r = q.DivMod(big.NewInt(0).SetUint64(x*f.k), big.NewInt(kBlockSizeBits), r)
+	q, r := new(big.Int).DivMod(new(big.Int).SetUint64(x*f.k), big.NewInt(kBlockSizeBits), new(big.Int))
+	fmt.Printf("q=%d, r=%d, x=%d, k=%d\n", q.Uint64(), r.Uint64(), x, f.k)
 
 	var qCipher [16]byte
 	data := utils.FillToBlock(q.Bytes())
 	f.key.Encrypt(qCipher[:], data)
-	res := big.NewInt(0).SetBytes(qCipher[:])
+	res := new(big.Int).SetBytes(qCipher[:])
 
 	if r.Uint64()+f.k <= kBlockSizeBits {
-		res = utils.Trunc(res, r.Uint64(), r.Uint64()+f.k, f.k)
+		res = utils.Trunc(res, r.Uint64(), r.Uint64()+f.k, kBlockSizeBits)
 	} else {
-		part1 := utils.Trunc(res, r.Uint64(), f.k, f.k)
+		fmt.Println("Running second encryption...")
+		part1 := utils.Trunc(res, r.Uint64(), f.k, kBlockSizeBits)
 		var q1Cipher [16]byte
 		data := utils.FillToBlock(q.Add(q, big.NewInt(1)).Bytes())
 		f.key.Encrypt(q1Cipher[:], data)
-		part2 := big.NewInt(0).SetBytes(q1Cipher[:])
-		part2 = utils.Trunc(part2, 0, r.Uint64()+f.k-kBlockSizeBits, f.k)
+		part2 := new(big.Int).SetBytes(q1Cipher[:])
+		part2 = utils.Trunc(part2, 0, r.Uint64()+f.k-kBlockSizeBits, kBlockSizeBits)
 		res = utils.Concat(f.k, part1.Uint64(), part2.Uint64())
 	}
 
