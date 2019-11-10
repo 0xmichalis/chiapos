@@ -2,6 +2,7 @@ package pos
 
 import (
 	"fmt"
+	"math"
 	"os"
 	"time"
 )
@@ -116,7 +117,7 @@ func WritePlotFile(filename string, k uint64, memo, id []byte) error {
 		return err
 	}
 
-	for x := uint64(0); x < 2^k; x++ {
+	for x := uint64(0); x < uint64(math.Pow(2, float64(k))); x++ {
 		f1x := f1.Calculate(x)
 		_, err := file.Write([]byte(fmt.Sprintf("%d %d", f1x, x)))
 		if err != nil {
