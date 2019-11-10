@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	k        = flag.Uint64("k", 33, "Storage parameter")
+	k        = flag.Uint64("k", 15, "Storage parameter")
 	plotPath = flag.String("f", "", "Final path to the plot")
 	keyPath  = flag.String("key", "", "Path to key to be used as a plot seed")
 )
@@ -34,8 +34,23 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := pos.WritePlotFile(*plotPath, *k, nil, key[:]); err != nil {
+	// If a plot path is not provided, use a temporary file
+	var plot string
+	if *plotPath != "" {
+		plot = *plotPath
+	} else {
+		plotFile, err := ioutil.TempFile("", "plot")
+		if err != nil {
+			fmt.Printf("cannot set up plot file: %v", err)
+			os.Exit(1)
+		}
+		plot = plotFile.Name()
+	}
+
+	fmt.Printf("Generating plot at %s...\n", plot)
+	if err := pos.WritePlotFile(plot, *k, nil, key[:]); err != nil {
 		fmt.Printf("cannot write plot: %v", err)
 		os.Exit(1)
 	}
+	fmt.Println("Plotting: OK")
 }
