@@ -39,7 +39,7 @@ func main() {
 	if *plotPath != "" {
 		plot = *plotPath
 	} else {
-		plotFile, err := ioutil.TempFile("", "plot")
+		plotFile, err := ioutil.TempFile("", "plot-")
 		if err != nil {
 			fmt.Printf("cannot set up plot file: %v", err)
 			os.Exit(1)
@@ -47,7 +47,7 @@ func main() {
 		plot = plotFile.Name()
 	}
 
-	fmt.Printf("Generating plot at %s...\n", plot)
+	fmt.Printf("Generating plot at %s\n", plot)
 	if err := pos.WritePlotFile(plot, *k, nil, key[:]); err != nil {
 		fmt.Printf("cannot write plot: %v", err)
 		os.Exit(1)

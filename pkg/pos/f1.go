@@ -75,21 +75,24 @@ func (f *F1) Calculate(x uint64) uint64 {
 	r := big.NewInt(0)
 	q, r = q.DivMod(big.NewInt(0).SetUint64(x*f.k), big.NewInt(kBlockSizeBits), r)
 
-	var qCipher []byte
-	f.key.Encrypt(qCipher, q.Bytes())
-	res := big.NewInt(0).SetBytes(qCipher)
+	var qCipher [16]byte
+	data := utils.FillToBlock(q.Bytes())
+	f.key.Encrypt(qCipher[:], data)
+	res := big.NewInt(0).SetBytes(qCipher[:])
 
 	if r.Uint64()+f.k <= kBlockSizeBits {
 		res = utils.Trunc(res, r.Uint64(), r.Uint64()+f.k, f.k)
 	} else {
 		part1 := utils.Trunc(res, r.Uint64(), f.k, f.k)
-		var q1Cipher []byte
-		f.key.Encrypt(q1Cipher, q.Add(q, big.NewInt(1)).Bytes())
-		part2 := big.NewInt(0).SetBytes(q1Cipher)
+		var q1Cipher [16]byte
+		data := utils.FillToBlock(q.Add(q, big.NewInt(1)).Bytes())
+		f.key.Encrypt(q1Cipher[:], data)
+		part2 := big.NewInt(0).SetBytes(q1Cipher[:])
 		part2 = utils.Trunc(part2, 0, r.Uint64()+f.k-kBlockSizeBits, f.k)
 		res = utils.Concat(f.k, part1.Uint64(), part2.Uint64())
 	}
 
-	res = utils.Concat(f.k, res.Uint64(), x%paramM)
-	return res.Uint64()
+	f1x := utils.Concat(f.k, res.Uint64(), x%paramM).Uint64()
+	fmt.Printf("Calculated f1(x)=%d for x=%d\n", f1x, x)
+	return f1x
 }

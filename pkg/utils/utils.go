@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"crypto/aes"
 	"crypto/cipher"
 	"errors"
 	"fmt"
@@ -203,4 +204,16 @@ func At(x, y, k uint64, t int, c cipher.Block) (*uint64, error) {
 	res := big.NewInt(0).SetBytes(cipherText)
 	r := Trunc(res, 0, k+5, k).Uint64()
 	return &r, nil
+}
+
+// FillToBlock fills the provided byte slice with leading zeroes
+// to match AES's block size requirements.
+func FillToBlock(plain []byte) []byte {
+	remainder := len(plain) % aes.BlockSize
+	if remainder == 0 && len(plain) > 0 {
+		return plain
+	}
+
+	leading := make([]byte, aes.BlockSize-remainder)
+	return append(leading, plain...)
 }
