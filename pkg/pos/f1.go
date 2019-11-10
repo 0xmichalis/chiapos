@@ -26,9 +26,6 @@ const (
 	kB      = 60
 	kC  int = 509
 	kBC     = kB * kC
-
-	kMin = 33
-	kMax = 59
 )
 
 // This (times k) is the length of the metadata that must be kept for each entry. For example,
@@ -50,8 +47,8 @@ type F1 struct {
 }
 
 func NewF1(k uint64, key []byte) (*F1, error) {
-	if k < kMin || k > kMax {
-		return nil, fmt.Errorf("invalid k: %d, valid range: %d - %d", k, kMin, kMax)
+	if k < kMinPlotSize || k > kMaxPlotSize {
+		return nil, fmt.Errorf("invalid k: %d, valid range: %d - %d", k, kMinPlotSize, kMaxPlotSize)
 	}
 
 	f1 := &F1{

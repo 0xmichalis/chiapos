@@ -13,8 +13,8 @@ type Fx struct {
 }
 
 func NewFx(k uint64, key []byte) (*Fx, error) {
-	if k < kMin || k > kMax {
-		return nil, fmt.Errorf("invalid k: %d, valid range: %d - %d", k, kMin, kMax)
+	if k < kMinPlotSize || k > kMaxPlotSize {
+		return nil, fmt.Errorf("invalid k: %d, valid range: %d - %d", k, kMinPlotSize, kMaxPlotSize)
 	}
 
 	f1 := &Fx{

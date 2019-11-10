@@ -3,6 +3,7 @@ package pos
 import (
 	"fmt"
 	"os"
+	"time"
 )
 
 const (
@@ -42,6 +43,7 @@ const (
 	kIdLen = 32
 
 	// Must be set high enough to prevent attacks of fast plotting
+	// TODO: Should be set to 33
 	kMinPlotSize = 15
 
 	// Set at 59 to allow easy use of 64 bit integers
@@ -50,7 +52,7 @@ const (
 	kFormatDescription = "alpha-v0.4"
 )
 
-func CreatePlotDisk(filename string, k int, memo, id []byte) error {
+func CreatePlotDisk(filename string, k uint64, memo, id []byte) error {
 	fmt.Printf("Starting plotting progress into file %s\n", filename)
 
 	// These variables are used in the WriteParkToFile method. They are pre-allocated here
@@ -98,7 +100,7 @@ func CalculateMaxDeltasSize(k, tableIndex int) int {
 // proofs of space in it. First, F1 is computed, which is special since it uses
 // AES256, and each encryption provides multiple output values. Then, the rest of the
 // f functions are computed, and a sort on disk happens for each table.
-func WritePlotFile(filename string, k int, memo, id []byte) error {
+func WritePlotFile(filename string, k uint64, memo, id []byte) error {
 	file, err := os.Create(filename)
 	if err != nil {
 		return err
@@ -108,8 +110,20 @@ func WritePlotFile(filename string, k int, memo, id []byte) error {
 	}
 
 	fmt.Println("Computing table 1...")
-	//now := time.Now()
-	//f1 := NewF1(k, id)
+	start := time.Now()
+	f1, err := NewF1(k, id)
+	if err != nil {
+		return err
+	}
+
+	for x := uint64(0); x < 2^k; x++ {
+		f1x := f1.Calculate(x)
+		_, err := file.Write([]byte(fmt.Sprintf("%d %d", f1x, x)))
+		if err != nil {
+			return err
+		}
+	}
+	fmt.Printf("F1 calculations finished in %v\n", time.Since(start))
 
 	return nil
 }
@@ -118,11 +132,9 @@ func WritePlotFile(filename string, k int, memo, id []byte) error {
 // 19 bytes  - "Proof of Space Plot" (utf-8)
 // 32 bytes  - unique plot id
 // 1 byte    - k
-// 2 bytes   - format description length
-// x bytes   - format description
 // 2 bytes   - memo length
 // x bytes   - memo
-func WriteHeader(file *os.File, k int, memo, id []byte) error {
+func WriteHeader(file *os.File, k uint64, memo, id []byte) error {
 	if _, err := file.Write([]byte("Proof of Space Plot")); err != nil {
 		return err
 	}
@@ -133,13 +145,6 @@ func WriteHeader(file *os.File, k int, memo, id []byte) error {
 		return err
 	}
 	sizeBuf := make([]byte, 2)
-	sizeBuf[0] = byte(len(kFormatDescription))
-	if _, err := file.Write(sizeBuf); err != nil {
-		return err
-	}
-	if _, err := file.Write([]byte(kFormatDescription)); err != nil {
-		return err
-	}
 	sizeBuf[0] = byte(len(memo))
 	if _, err := file.Write(sizeBuf); err != nil {
 		return err
