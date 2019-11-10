@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"time"
 
 	"github.com/kargakis/gochia/pkg/pos"
 )
@@ -48,9 +49,10 @@ func main() {
 	}
 
 	fmt.Printf("Generating plot at %s\n", plot)
+	plotStart := time.Now()
 	if err := pos.WritePlotFile(plot, *k, nil, key[:]); err != nil {
 		fmt.Printf("cannot write plot: %v", err)
 		os.Exit(1)
 	}
-	fmt.Println("Plotting: OK")
+	fmt.Printf("Plotting: OK (%v)\n", time.Since(plotStart))
 }

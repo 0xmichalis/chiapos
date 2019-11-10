@@ -70,7 +70,7 @@ func NewF1(k uint64, key []byte) (*F1, error) {
 // Calculate expects an input of 2^k bits
 func (f *F1) Calculate(x uint64) uint64 {
 	q, r := new(big.Int).DivMod(new(big.Int).SetUint64(x*f.k), big.NewInt(kBlockSizeBits), new(big.Int))
-	fmt.Printf("q=%d, r=%d, x=%d, k=%d\n", q.Uint64(), r.Uint64(), x, f.k)
+	// fmt.Printf("q=%d, r=%d, x=%d, k=%d\n", q.Uint64(), r.Uint64(), x, f.k)
 
 	var qCipher [16]byte
 	data := utils.FillToBlock(q.Bytes())
@@ -80,7 +80,6 @@ func (f *F1) Calculate(x uint64) uint64 {
 	if r.Uint64()+f.k <= kBlockSizeBits {
 		res = utils.Trunc(res, r.Uint64(), r.Uint64()+f.k, kBlockSizeBits)
 	} else {
-		fmt.Println("Running second encryption...")
 		part1 := utils.Trunc(res, r.Uint64(), f.k, kBlockSizeBits)
 		var q1Cipher [16]byte
 		data := utils.FillToBlock(q.Add(q, big.NewInt(1)).Bytes())
@@ -91,6 +90,6 @@ func (f *F1) Calculate(x uint64) uint64 {
 	}
 
 	f1x := utils.Concat(f.k, res.Uint64(), x%paramM).Uint64()
-	fmt.Printf("Calculated f1(x)=%d for x=%d\n", f1x, x)
+	// fmt.Printf("Calculated f1(x)=%d for x=%d\n", f1x, x)
 	return f1x
 }
