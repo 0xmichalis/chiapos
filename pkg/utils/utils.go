@@ -10,15 +10,6 @@ import (
 	"math/bits"
 )
 
-// Set returns the set of x -> [X] is the set {0, 1, ..., X-1}
-func Set(x uint) []uint {
-	set := make([]uint, x)
-	for i := uint(0); i < x; i++ {
-		set[i] = i
-	}
-	return set
-}
-
 // Concat performs zero-padded concatenation of the provided xs.
 // Every member of xs is normalised to a [2^k] number.
 // TODO: Maybe move normalisation out of here.

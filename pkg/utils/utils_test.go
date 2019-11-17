@@ -3,42 +3,8 @@ package utils
 import (
 	"math/big"
 	"math/bits"
-	"reflect"
 	"testing"
 )
-
-func TestSet(t *testing.T) {
-	tests := []struct {
-		name string
-		x    uint
-		want []uint
-	}{
-		// TODO: Not sure whether [0] and [1] are valid sets but for the sake of completeness
-		// here are the current results from Set
-		{
-			name: "zero set",
-			x:    0,
-			want: []uint{},
-		},
-		{
-			name: "one",
-			x:    1,
-			want: []uint{0},
-		},
-		{
-			name: "set",
-			x:    10,
-			want: []uint{0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
-		},
-	}
-
-	for _, tt := range tests {
-		got := Set(tt.x)
-		if !reflect.DeepEqual(got, tt.want) {
-			t.Errorf("%s: expected set:\n%v\ngot set:\n%v", tt.name, tt.want, got)
-		}
-	}
-}
 
 func TestConcat(t *testing.T) {
 	zeroInt := big.NewInt(0)
