@@ -11,6 +11,8 @@ import (
 	"math/big"
 	"reflect"
 	"testing"
+
+	"github.com/btcsuite/btcd/btcec"
 )
 
 // TestSetInt ensures that setting a field value to various native integers
@@ -690,7 +692,7 @@ func TestNfieldMulRand(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to read random data")
 	}
-	N := S256().N
+	N := btcec.S256().N
 	a := new(big.Int).SetBytes(data)
 	aN := new(NFieldVal).SetByteSlice(a.Bytes())
 	for i := 0; i < 100; i++ {
@@ -771,7 +773,7 @@ func TestNfieldSquareRand(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to read random data")
 	}
-	N := S256().N
+	N := btcec.S256().N
 	a := new(big.Int).SetBytes(data)
 	aN := new(NFieldVal).SetByteSlice(a.Bytes())
 	for i := 0; i < 100; i++ {
@@ -845,7 +847,7 @@ func TestNfieldInverse(t *testing.T) {
 // TestNfieldInverseRand tests the inverse correctness by doing the
 // same calculation with Big.Int
 func TestNfieldInverseRand(t *testing.T) {
-	N := S256().N
+	N := btcec.S256().N
 	for i := 0; i < 100; i++ {
 		data := make([]byte, 32)
 		_, err := rand.Read(data)
@@ -901,7 +903,7 @@ func TestNfieldCmp(t *testing.T) {
 // TestNfieldMagnitudeRand tests the correctness of Magnitude by doing the
 // same calculation with Big.Int
 func TestNfieldMagnitudeRand(t *testing.T) {
-	N := S256().N
+	N := btcec.S256().N
 	failures := 0
 	for i := 0; i < 1000; i++ {
 		data := make([]byte, 32)
