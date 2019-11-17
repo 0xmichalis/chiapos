@@ -1749,3 +1749,66 @@ func (f *NFieldVal) DebugPrint() {
 func (f *NFieldVal) BitLen() int {
 	return 256
 }
+
+// Lsh shifts f left s times. s shouldn't be larger than
+// 32, otherwise f internal values can overflow. If a left
+// shift N, higher than 32, is required, it can be done by
+// chaining Lsh, such as:
+//
+// f := new(nfield.NFieldVal).Lsh(32).Lsh(N-32)
+//
+// Note that N is assumed to be less than 64 in the above
+// example.
+func (f *NFieldVal) Lsh(s uint) *NFieldVal {
+	m := uint64(f.n[0]) << s
+	t0 := m & nfieldBaseMask
+
+	m = (m >> fieldBase) +
+		uint64(f.n[1])<<s
+	t1 := m & nfieldBaseMask
+
+	m = (m >> fieldBase) +
+		uint64(f.n[2])<<s
+	t2 := m & nfieldBaseMask
+
+	m = (m >> fieldBase) +
+		uint64(f.n[3])<<s
+	t3 := m & nfieldBaseMask
+
+	m = (m >> fieldBase) +
+		uint64(f.n[4])<<s
+	t4 := m & nfieldBaseMask
+
+	m = (m >> fieldBase) +
+		uint64(f.n[5])<<s
+	t5 := m & nfieldBaseMask
+
+	m = (m >> fieldBase) +
+		uint64(f.n[6])<<s
+	t6 := m & nfieldBaseMask
+
+	m = (m >> fieldBase) +
+		uint64(f.n[7])<<s
+	t7 := m & nfieldBaseMask
+
+	m = (m >> fieldBase) +
+		uint64(f.n[8])<<s
+	t8 := m & nfieldBaseMask
+
+	m = (m >> fieldBase) +
+		uint64(f.n[9])<<s
+	t9 := m & nfieldBaseMask
+
+	f.n[0] = uint32(t0)
+	f.n[1] = uint32(t1)
+	f.n[2] = uint32(t2)
+	f.n[3] = uint32(t3)
+	f.n[4] = uint32(t4)
+	f.n[5] = uint32(t5)
+	f.n[6] = uint32(t6)
+	f.n[7] = uint32(t7)
+	f.n[8] = uint32(t8)
+	f.n[9] = uint32(t9)
+
+	return f
+}

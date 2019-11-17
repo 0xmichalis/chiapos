@@ -942,3 +942,44 @@ func TestNfieldMagnitudeRand(t *testing.T) {
 		t.Errorf("Errored %d times", failures)
 	}
 }
+
+// TestNfieldLsh tests the left shift correctness by doing the
+// same calculation with Big.Int
+func TestNfieldLsh(t *testing.T) {
+	for i := 0; i < 1000; i++ {
+		data := make([]byte, 16)
+		_, err := rand.Read(data)
+		if err != nil {
+			t.Fatalf("failed to read random data")
+		}
+		a := new(big.Int).SetBytes(data)
+		aN := new(NFieldVal).SetByteSlice(a.Bytes())
+		c := big.NewInt(0)
+		c.Lsh(a, 59)
+		cN := aN.Lsh(32).Lsh(27)
+		cstr := fmt.Sprintf("%064x", c)
+		if cN.String() != cstr {
+			t.Fatalf("expected strings to be the same, was not: %v %v", cN.String(), cstr)
+		}
+	}
+}
+
+func BenchmarkNFieldValSetBytes(b *testing.B) {
+	data := make([]byte, 32)
+	if _, err := rand.Read(data); err != nil {
+		b.Fatal(err)
+	}
+	for i := 0; i < b.N; i++ {
+		new(NFieldVal).SetByteSlice(data)
+	}
+}
+
+func BenchmarkBigIntSetBytes(b *testing.B) {
+	data := make([]byte, 32)
+	if _, err := rand.Read(data); err != nil {
+		b.Fatal(err)
+	}
+	for i := 0; i < b.N; i++ {
+		new(big.Int).SetBytes(data)
+	}
+}
