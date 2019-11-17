@@ -67,7 +67,8 @@ func NewF1(k uint64, key []byte) (*F1, error) {
 	return f1, nil
 }
 
-// Calculate expects an input of 2^k bits
+// Calculate expects an input of 2^k bits.
+// The result should be of 2^(k+kExtraBits) bits.
 func (f *F1) Calculate(x uint64) uint64 {
 	q, r := new(big.Int).DivMod(new(big.Int).SetUint64(x*f.k), big.NewInt(kBlockSizeBits), new(big.Int))
 	// fmt.Printf("q=%d, r=%d, x=%d, k=%d\n", q.Uint64(), r.Uint64(), x, f.k)
