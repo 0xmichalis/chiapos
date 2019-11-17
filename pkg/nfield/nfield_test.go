@@ -31,10 +31,10 @@ func TestNfieldSetInt(t *testing.T) {
 
 	t.Logf("Running %d tests", len(tests))
 	for i, test := range tests {
-		f := new(nfieldVal).SetInt(test.in)
+		f := new(NFieldVal).SetInt(test.in)
 		result := f.n
 		if !reflect.DeepEqual(result, test.raw) {
-			t.Errorf("nfieldVal.Set #%d wrong result\ngot: %v\n"+
+			t.Errorf("NFieldVal.Set #%d wrong result\ngot: %v\n"+
 				"want: %v", i, result, test.raw)
 			continue
 		}
@@ -43,7 +43,7 @@ func TestNfieldSetInt(t *testing.T) {
 
 // TestZero ensures that zeroing a field value zero works as expected.
 func TestNfieldZero(t *testing.T) {
-	f := new(nfieldVal).SetInt(2)
+	f := new(NFieldVal).SetInt(2)
 	f.Zero()
 	for idx, rawInt := range f.n {
 		if rawInt != 0 {
@@ -55,7 +55,7 @@ func TestNfieldZero(t *testing.T) {
 
 // TestIsZero ensures that checking if a field IsZero works as expected.
 func TestNfieldIsZero(t *testing.T) {
-	f := new(nfieldVal)
+	f := new(NFieldVal)
 	if !f.IsZero() {
 		t.Errorf("new field value is not zero - got %v (rawints %x)", f,
 			f.n)
@@ -150,10 +150,10 @@ func TestNfieldStringer(t *testing.T) {
 
 	t.Logf("Running %d tests", len(tests))
 	for i, test := range tests {
-		f := new(nfieldVal).SetHex(test.in)
+		f := new(NFieldVal).SetHex(test.in)
 		result := f.String()
 		if result != test.expected {
-			t.Errorf("nfieldVal.String #%d wrong result\ngot: %v\n"+
+			t.Errorf("NFieldVal.String #%d wrong result\ngot: %v\n"+
 				"want: %v", i, result, test.expected)
 			continue
 		}
@@ -260,14 +260,14 @@ func TestNfieldNormalize(t *testing.T) {
 
 	t.Logf("Running %d tests", len(tests))
 	for i, test := range tests {
-		f := new(nfieldVal)
+		f := new(NFieldVal)
 		for i := 0; i < len(test.raw); i++ {
 			f.n[i] = test.raw[i]
 		}
 		f.Normalize()
 		result := f.n
 		if !reflect.DeepEqual(result, test.normalized) {
-			t.Errorf("nfieldVal.Set #%d wrong normalized result\n"+
+			t.Errorf("NFieldVal.Set #%d wrong normalized result\n"+
 				"got: %x\nwant: %x", i, result, test.normalized)
 			continue
 		}
@@ -293,10 +293,10 @@ func TestNfieldIsOdd(t *testing.T) {
 
 	t.Logf("Running %d tests", len(tests))
 	for i, test := range tests {
-		f := new(nfieldVal).SetHex(test.in)
+		f := new(NFieldVal).SetHex(test.in)
 		result := f.IsOdd()
 		if result != test.expected {
-			t.Errorf("nfieldVal.IsOdd #%d wrong result\n"+
+			t.Errorf("NFieldVal.IsOdd #%d wrong result\n"+
 				"got: %v\nwant: %v", i, result, test.expected)
 			continue
 		}
@@ -326,11 +326,11 @@ func TestNfieldEquals(t *testing.T) {
 
 	t.Logf("Running %d tests", len(tests))
 	for i, test := range tests {
-		f := new(nfieldVal).SetHex(test.in1).Normalize()
-		f2 := new(nfieldVal).SetHex(test.in2).Normalize()
+		f := new(NFieldVal).SetHex(test.in1).Normalize()
+		f2 := new(NFieldVal).SetHex(test.in2).Normalize()
 		result := f.Equals(f2)
 		if result != test.expected {
-			t.Errorf("nfieldVal.Equals #%d wrong result\n"+
+			t.Errorf("NFieldVal.Equals #%d wrong result\n"+
 				"got: %v\nwant: %v", i, result, test.expected)
 			continue
 		}
@@ -386,11 +386,11 @@ func TestNfieldNegate(t *testing.T) {
 
 	t.Logf("Running %d tests", len(tests))
 	for i, test := range tests {
-		f := new(nfieldVal).SetHex(test.in).Normalize()
-		expected := new(nfieldVal).SetHex(test.expected).Normalize()
+		f := new(NFieldVal).SetHex(test.in).Normalize()
+		expected := new(NFieldVal).SetHex(test.expected).Normalize()
 		result := f.Negate().Normalize()
 		if !result.Equals(expected) {
-			t.Errorf("nfieldVal.Negate #%d wrong result\n"+
+			t.Errorf("NFieldVal.Negate #%d wrong result\n"+
 				"got: %v\nwant: %v", i, result, expected)
 			continue
 		}
@@ -437,11 +437,11 @@ func TestNfieldAddInt(t *testing.T) {
 
 	t.Logf("Running %d tests", len(tests))
 	for i, test := range tests {
-		f := new(nfieldVal).SetHex(test.in1).Normalize()
-		expected := new(nfieldVal).SetHex(test.expected).Normalize()
+		f := new(NFieldVal).SetHex(test.in1).Normalize()
+		expected := new(NFieldVal).SetHex(test.expected).Normalize()
 		result := f.AddInt(test.in2).Normalize()
 		if !result.Equals(expected) {
-			t.Errorf("nfieldVal.AddInt #%d wrong result\n"+
+			t.Errorf("NFieldVal.AddInt #%d wrong result\n"+
 				"got: %v\nwant: %v", i, result, expected)
 			continue
 		}
@@ -488,12 +488,12 @@ func TestNfieldAdd(t *testing.T) {
 
 	t.Logf("Running %d tests", len(tests))
 	for i, test := range tests {
-		f := new(nfieldVal).SetHex(test.in1).Normalize()
-		f2 := new(nfieldVal).SetHex(test.in2).Normalize()
-		expected := new(nfieldVal).SetHex(test.expected).Normalize()
+		f := new(NFieldVal).SetHex(test.in1).Normalize()
+		f2 := new(NFieldVal).SetHex(test.in2).Normalize()
+		expected := new(NFieldVal).SetHex(test.expected).Normalize()
 		result := f.Add(f2).Normalize()
 		if !result.Equals(expected) {
-			t.Errorf("nfieldVal.Add #%d wrong result\n"+
+			t.Errorf("NFieldVal.Add #%d wrong result\n"+
 				"got: %v\nwant: %v", i, result, expected)
 			continue
 		}
@@ -540,12 +540,12 @@ func TestNfieldAdd2(t *testing.T) {
 
 	t.Logf("Running %d tests", len(tests))
 	for i, test := range tests {
-		f := new(nfieldVal).SetHex(test.in1).Normalize()
-		f2 := new(nfieldVal).SetHex(test.in2).Normalize()
-		expected := new(nfieldVal).SetHex(test.expected).Normalize()
+		f := new(NFieldVal).SetHex(test.in1).Normalize()
+		f2 := new(NFieldVal).SetHex(test.in2).Normalize()
+		expected := new(NFieldVal).SetHex(test.expected).Normalize()
 		result := f.Add2(f, f2).Normalize()
 		if !result.Equals(expected) {
-			t.Errorf("nfieldVal.Add2 #%d wrong result\n"+
+			t.Errorf("NFieldVal.Add2 #%d wrong result\n"+
 				"got: %v\nwant: %v", i, result, expected)
 			continue
 		}
@@ -605,11 +605,11 @@ func TestNfieldMulInt(t *testing.T) {
 
 	t.Logf("Running %d tests", len(tests))
 	for i, test := range tests {
-		f := new(nfieldVal).SetHex(test.in1).Normalize()
-		expected := new(nfieldVal).SetHex(test.expected).Normalize()
+		f := new(NFieldVal).SetHex(test.in1).Normalize()
+		expected := new(NFieldVal).SetHex(test.expected).Normalize()
 		result := f.MulInt(test.in2).Normalize()
 		if !result.Equals(expected) {
-			t.Errorf("nfieldVal.MulInt #%d wrong result\n"+
+			t.Errorf("NFieldVal.MulInt #%d wrong result\n"+
 				"got: %v\nwant: %v", i, result, expected)
 			continue
 		}
@@ -670,12 +670,12 @@ func TestNfieldMul(t *testing.T) {
 
 	t.Logf("Running %d tests", len(tests))
 	for i, test := range tests {
-		f := new(nfieldVal).SetHex(test.in1).Normalize()
-		f2 := new(nfieldVal).SetHex(test.in2).Normalize()
-		expected := new(nfieldVal).SetHex(test.expected).Normalize()
+		f := new(NFieldVal).SetHex(test.in1).Normalize()
+		f2 := new(NFieldVal).SetHex(test.in2).Normalize()
+		expected := new(NFieldVal).SetHex(test.expected).Normalize()
 		result := f.Mul(f2).Normalize()
 		if !result.Equals(expected) {
-			t.Errorf("nfieldVal.Mul #%d wrong result\n"+
+			t.Errorf("NFieldVal.Mul #%d wrong result\n"+
 				"got: %v\nwant: %v", i, result, expected)
 			continue
 		}
@@ -692,7 +692,7 @@ func TestNfieldMulRand(t *testing.T) {
 	}
 	N := S256().N
 	a := new(big.Int).SetBytes(data)
-	aN := new(nfieldVal).SetByteSlice(a.Bytes())
+	aN := new(NFieldVal).SetByteSlice(a.Bytes())
 	for i := 0; i < 100; i++ {
 		data = make([]byte, 32)
 		_, err := rand.Read(data)
@@ -704,8 +704,8 @@ func TestNfieldMulRand(t *testing.T) {
 		c := big.NewInt(0)
 		c.Mul(a, b)
 		c.Mod(c, N)
-		bN := new(nfieldVal).SetByteSlice(b.Bytes())
-		cN := new(nfieldVal)
+		bN := new(NFieldVal).SetByteSlice(b.Bytes())
+		cN := new(NFieldVal)
 		cN.Mul2(aN, bN)
 		cstr := fmt.Sprintf("%064x", c)
 		if cN.String() != cstr {
@@ -752,11 +752,11 @@ func TestNfieldSquare(t *testing.T) {
 
 	t.Logf("Running %d tests", len(tests))
 	for i, test := range tests {
-		f := new(nfieldVal).SetHex(test.in).Normalize()
-		expected := new(nfieldVal).SetHex(test.expected).Normalize()
+		f := new(NFieldVal).SetHex(test.in).Normalize()
+		expected := new(NFieldVal).SetHex(test.expected).Normalize()
 		result := f.Square().Normalize()
 		if !result.Equals(expected) {
-			t.Errorf("nfieldVal.Square #%d wrong result\n"+
+			t.Errorf("NFieldVal.Square #%d wrong result\n"+
 				"got: %v\nwant: %v", i, result, expected)
 			continue
 		}
@@ -773,12 +773,12 @@ func TestNfieldSquareRand(t *testing.T) {
 	}
 	N := S256().N
 	a := new(big.Int).SetBytes(data)
-	aN := new(nfieldVal).SetByteSlice(a.Bytes())
+	aN := new(NFieldVal).SetByteSlice(a.Bytes())
 	for i := 0; i < 100; i++ {
 		c := big.NewInt(0)
 		c.Mul(a, a)
 		c.Mod(c, N)
-		cN := new(nfieldVal)
+		cN := new(NFieldVal)
 		cN.SquareVal(aN)
 		cstr := fmt.Sprintf("%064x", c)
 		if cN.String() != cstr {
@@ -831,11 +831,11 @@ func TestNfieldInverse(t *testing.T) {
 
 	t.Logf("Running %d tests", len(tests))
 	for i, test := range tests {
-		f := new(nfieldVal).SetHex(test.in).Normalize()
-		expected := new(nfieldVal).SetHex(test.expected).Normalize()
+		f := new(NFieldVal).SetHex(test.in).Normalize()
+		expected := new(NFieldVal).SetHex(test.expected).Normalize()
 		result := f.Inverse().Normalize()
 		if !result.Equals(expected) {
-			t.Errorf("nfieldVal.Inverse #%d wrong result\n"+
+			t.Errorf("NFieldVal.Inverse #%d wrong result\n"+
 				"got: %v\nwant: %v", i, result, expected)
 			continue
 		}
@@ -853,7 +853,7 @@ func TestNfieldInverseRand(t *testing.T) {
 			t.Fatalf("failed to read random data")
 		}
 		a := new(big.Int).SetBytes(data)
-		aN := new(nfieldVal).SetByteSlice(a.Bytes())
+		aN := new(NFieldVal).SetByteSlice(a.Bytes())
 		c := big.NewInt(0)
 		c.ModInverse(a, N)
 		cN := aN.Inverse()
@@ -873,7 +873,7 @@ func TestNfieldCmp(t *testing.T) {
 		t.Fatalf("failed to read random data")
 	}
 	a := new(big.Int).SetBytes(data)
-	aN := new(nfieldVal).SetByteSlice(a.Bytes())
+	aN := new(NFieldVal).SetByteSlice(a.Bytes())
 	for i := 0; i < 100; i++ {
 		data = make([]byte, 32)
 		_, err := rand.Read(data)
@@ -883,7 +883,7 @@ func TestNfieldCmp(t *testing.T) {
 		}
 		b := new(big.Int).SetBytes(data)
 		c := a.Cmp(b)
-		bN := new(nfieldVal).SetByteSlice(b.Bytes())
+		bN := new(NFieldVal).SetByteSlice(b.Bytes())
 		cN := aN.Cmp(bN)
 		if cN != c {
 			t.Fatalf("expected cmp to be the same, was not: %d %d", cN, c)
@@ -910,7 +910,7 @@ func TestNfieldMagnitudeRand(t *testing.T) {
 			t.Errorf("failed to read random data")
 		}
 		a := new(big.Int).SetBytes(data)
-		aN := new(nfieldVal).SetByteSlice(a.Bytes())
+		aN := new(NFieldVal).SetByteSlice(a.Bytes())
 		aN.Normalize()
 		data = make([]byte, 32)
 		_, err = rand.Read(data)
@@ -922,9 +922,9 @@ func TestNfieldMagnitudeRand(t *testing.T) {
 		c := new(big.Int)
 		c.Mul(a, b)
 		c.Div(c, N)
-		bN := new(nfieldVal).SetByteSlice(b.Bytes())
+		bN := new(NFieldVal).SetByteSlice(b.Bytes())
 		bN.Normalize()
-		cN := new(nfieldVal)
+		cN := new(NFieldVal)
 		cN.Magnitude(aN, bN)
 		c2 := new(big.Int).SetBytes(cN.Bytes()[:])
 		diff := new(big.Int)

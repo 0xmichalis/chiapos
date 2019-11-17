@@ -114,7 +114,7 @@ const (
 	eightBitsMask = 0xff
 )
 
-// nfieldVal implements optimized fixed-precision arithmetic over the
+// NFieldVal implements optimized fixed-precision arithmetic over the
 // secp256k1 finite curve order.  This means all arithmetic is performed modulo
 // 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141.  It
 // represents each 256-bit value as 10 32-bit integers in base 2^26.  This
@@ -144,20 +144,20 @@ const (
 // 	n[1] * 2^(26*1) = 2^23 * 2^26  = 2^49
 // 	n[0] * 2^(26*0) = 1    * 2^0   = 1
 // 	Sum: 0 + 0 + ... + 2^49 + 1 = 2^49 + 1
-type nfieldVal struct {
+type NFieldVal struct {
 	n [10]uint32
 }
 
 // String returns the nfield value as a human-readable hex string.
-func (f nfieldVal) String() string {
-	t := new(nfieldVal).Set(&f).Normalize()
+func (f NFieldVal) String() string {
+	t := new(NFieldVal).Set(&f).Normalize()
 	return hex.EncodeToString(t.Bytes()[:])
 }
 
 // Zero sets the nfield value to zero.  A newly created nfield value is already
 // set to zero.  This function can be useful to clear an existing nfield value
 // for reuse.
-func (f *nfieldVal) Zero() {
+func (f *NFieldVal) Zero() {
 	f.n[0] = 0
 	f.n[1] = 0
 	f.n[2] = 0
@@ -173,9 +173,9 @@ func (f *nfieldVal) Zero() {
 // Set sets the nfield value equal to the passed value.
 //
 // The nfield value is returned to support chaining.  This enables syntax like:
-// f := new(nfieldVal).Set(f2).Add(1) so that f = f2 + 1 where f2 is not
+// f := new(NFieldVal).Set(f2).Add(1) so that f = f2 + 1 where f2 is not
 // modified.
-func (f *nfieldVal) Set(val *nfieldVal) *nfieldVal {
+func (f *NFieldVal) Set(val *NFieldVal) *NFieldVal {
 	*f = *val
 	return f
 }
@@ -185,8 +185,8 @@ func (f *nfieldVal) Set(val *nfieldVal) *nfieldVal {
 // native integers.
 //
 // The nfield value is returned to support chaining.  This enables syntax such
-// as f := new(nfieldVal).SetInt(2).Mul(f2) so that f = 2 * f2.
-func (f *nfieldVal) SetInt(ui uint) *nfieldVal {
+// as f := new(NFieldVal).SetInt(2).Mul(f2) so that f = 2 * f2.
+func (f *NFieldVal) SetInt(ui uint) *NFieldVal {
 	f.Zero()
 	f.n[0] = uint32(ui)
 	return f
@@ -196,8 +196,8 @@ func (f *nfieldVal) SetInt(ui uint) *nfieldVal {
 // value representation.
 //
 // The nfield value is returned to support chaining.  This enables syntax like:
-// f := new(nfieldVal).SetBytes(byteArray).Mul(f2) so that f = ba * f2.
-func (f *nfieldVal) SetBytes(b *[32]byte) *nfieldVal {
+// f := new(NFieldVal).SetBytes(byteArray).Mul(f2) so that f = ba * f2.
+func (f *NFieldVal) SetBytes(b *[32]byte) *NFieldVal {
 	// Pack the 256 total bits across the 10 uint32 words with a max of
 	// 26-bits per word.  This could be done with a couple of for loops,
 	// but this unrolled version is significantly faster.  Benchmarks show
@@ -230,8 +230,8 @@ func (f *nfieldVal) SetBytes(b *[32]byte) *nfieldVal {
 // will be truncated.
 //
 // The nfield value is returned to support chaining.  This enables syntax like:
-// f := new(nfieldVal).SetByteSlice(byteSlice)
-func (f *nfieldVal) SetByteSlice(b []byte) *nfieldVal {
+// f := new(NFieldVal).SetByteSlice(byteSlice)
+func (f *NFieldVal) SetByteSlice(b []byte) *NFieldVal {
 	var b32 [32]byte
 	cap := len(b)
 	if cap > 32 {
@@ -249,8 +249,8 @@ func (f *nfieldVal) SetByteSlice(b []byte) *nfieldVal {
 // representation.  Only the first 32-bytes are used.
 //
 // The nfield value is returned to support chaining.  This enables syntax like:
-// f := new(nfieldVal).SetHex("0abc").Add(1) so that f = 0x0abc + 1
-func (f *nfieldVal) SetHex(hexString string) *nfieldVal {
+// f := new(NFieldVal).SetHex("0abc").Add(1) so that f = 0x0abc + 1
+func (f *NFieldVal) SetHex(hexString string) *NFieldVal {
 	if len(hexString)%2 != 0 {
 		hexString = "0" + hexString
 	}
@@ -261,7 +261,7 @@ func (f *nfieldVal) SetHex(hexString string) *nfieldVal {
 // Normalize normalizes the internal nfield words into the desired range and
 // performs fast modular reduction over the secp256k1 curve order by making use of the
 // special form of the curve order.
-func (f *nfieldVal) Normalize() *nfieldVal {
+func (f *NFieldVal) Normalize() *NFieldVal {
 	// The nfield representation leaves 6 bits of overflow in each
 	// word so intermediate calculations can be performed without needing
 	// to propagate the carry to each higher word during the calculations.
@@ -442,7 +442,7 @@ func (f *nfieldVal) Normalize() *nfieldVal {
 //
 // The nfield value must be normalized for this function to return the correct
 // result.
-func (f *nfieldVal) PutBytes(b *[32]byte) {
+func (f *NFieldVal) PutBytes(b *[32]byte) {
 	// Unpack the 256 total bits from the 10 uint32 words with a max of
 	// 26-bits per word.  This could be done with a couple of for loops,
 	// but this unrolled version is a bit faster.  Benchmarks show this is
@@ -488,14 +488,14 @@ func (f *nfieldVal) PutBytes(b *[32]byte) {
 //
 // The nfield value must be normalized for this function to return correct
 // result.
-func (f *nfieldVal) Bytes() *[32]byte {
+func (f *NFieldVal) Bytes() *[32]byte {
 	b := new([32]byte)
 	f.PutBytes(b)
 	return b
 }
 
 // IsZero returns whether or not the nfield value is equal to zero.
-func (f *nfieldVal) IsZero() bool {
+func (f *NFieldVal) IsZero() bool {
 	// The value can only be zero if no bits are set in any of the words.
 	// This is a constant time implementation.
 	bits := f.n[0] | f.n[1] | f.n[2] | f.n[3] | f.n[4] |
@@ -508,7 +508,7 @@ func (f *nfieldVal) IsZero() bool {
 //
 // The nfield value must be normalized for this function to return correct
 // result.
-func (f *nfieldVal) IsOdd() bool {
+func (f *NFieldVal) IsOdd() bool {
 	// Only odd numbers have the bottom bit set.
 	return f.n[0]&1 == 1
 }
@@ -516,7 +516,7 @@ func (f *nfieldVal) IsOdd() bool {
 // Equals returns whether or not the two nfield values are the same.  Both
 // nfield values being compared must be normalized for this function to return
 // the correct result.
-func (f *nfieldVal) Equals(val *nfieldVal) bool {
+func (f *NFieldVal) Equals(val *NFieldVal) bool {
 	// Xor only sets bits when they are different, so the two nfield values
 	// can only be the same if no bits are set after xoring each word.
 	// This is a constant time implementation.
@@ -533,7 +533,7 @@ func (f *nfieldVal) Equals(val *nfieldVal) bool {
 //
 // The nfield value is returned to support chaining.  This enables syntax like:
 // f.NegateVal(f2).AddInt(1) so that f = -f2 + 1.
-func (f *nfieldVal) NegateVal(val *nfieldVal) *nfieldVal {
+func (f *NFieldVal) NegateVal(val *NFieldVal) *NFieldVal {
 	// Negation in the nfield is just the order minus the value.
 	// Normalize first
 	f.Normalize()
@@ -623,7 +623,7 @@ func (f *nfieldVal) NegateVal(val *nfieldVal) *nfieldVal {
 //
 // The nfield value is returned to support chaining.  This enables syntax like:
 // f.Negate().AddInt(1) so that f = -f + 1.
-func (f *nfieldVal) Negate() *nfieldVal {
+func (f *NFieldVal) Negate() *NFieldVal {
 	return f.NegateVal(f)
 }
 
@@ -633,7 +633,7 @@ func (f *nfieldVal) Negate() *nfieldVal {
 //
 // The nfield value is returned to support chaining.  This enables syntax like:
 // f.AddInt(1).Add(f2) so that f = f + 1 + f2.
-func (f *nfieldVal) AddInt(ui uint) *nfieldVal {
+func (f *NFieldVal) AddInt(ui uint) *NFieldVal {
 	// Since the nfield representation intentionally provides overflow bits,
 	// it's ok to use carryless addition as the carry bit is safely part of
 	// the word and will be normalized out.
@@ -647,7 +647,7 @@ func (f *nfieldVal) AddInt(ui uint) *nfieldVal {
 //
 // The nfield value is returned to support chaining.  This enables syntax like:
 // f.Add(f2).AddInt(1) so that f = f + f2 + 1.
-func (f *nfieldVal) Add(val *nfieldVal) *nfieldVal {
+func (f *NFieldVal) Add(val *NFieldVal) *NFieldVal {
 	// Since the nfield representation intentionally provides overflow bits,
 	// it's ok to use carryless addition as the carry bit is safely part of
 	// each word and will be normalized out.  This could obviously be done
@@ -670,7 +670,7 @@ func (f *nfieldVal) Add(val *nfieldVal) *nfieldVal {
 //
 // The nfield value is returned to support chaining.  This enables syntax like:
 // f3.Add2(f, f2).AddInt(1) so that f3 = f + f2 + 1.
-func (f *nfieldVal) Add2(val *nfieldVal, val2 *nfieldVal) *nfieldVal {
+func (f *NFieldVal) Add2(val *NFieldVal, val2 *NFieldVal) *NFieldVal {
 	// Since the nfield representation intentionally provides overflow bits,
 	// it's ok to use carryless addition as the carry bit is safely part of
 	// each word and will be normalized out.  This could obviously be done
@@ -696,7 +696,7 @@ func (f *nfieldVal) Add2(val *nfieldVal, val2 *nfieldVal) *nfieldVal {
 //
 // The nfield value is returned to support chaining.  This enables syntax like:
 // f.MulInt(2).Add(f2) so that f = 2 * f + f2.
-func (f *nfieldVal) MulInt(val uint) *nfieldVal {
+func (f *NFieldVal) MulInt(val uint) *NFieldVal {
 	// Since each word of the nfield representation can hold up to
 	// nfieldOverflowBits extra bits which will be normalized out, it's safe
 	// to multiply each word without using a larger type or carry
@@ -726,7 +726,7 @@ func (f *nfieldVal) MulInt(val uint) *nfieldVal {
 //
 // The nfield value is returned to support chaining.  This enables syntax like:
 // f.Mul(f2).AddInt(1) so that f = (f * f2) + 1.
-func (f *nfieldVal) Mul(val *nfieldVal) *nfieldVal {
+func (f *NFieldVal) Mul(val *NFieldVal) *NFieldVal {
 	return f.Mul2(f, val)
 }
 
@@ -738,7 +738,7 @@ func (f *nfieldVal) Mul(val *nfieldVal) *nfieldVal {
 //
 // The nfield value is returned to support chaining.  This enables syntax like:
 // f3.Mul2(f, f2).AddInt(1) so that f3 = (f * f2) + 1.
-func (f *nfieldVal) Mul2(val *nfieldVal, val2 *nfieldVal) *nfieldVal {
+func (f *NFieldVal) Mul2(val *NFieldVal, val2 *NFieldVal) *NFieldVal {
 	// This could be done with a couple of for loops and an array to store
 	// the intermediate terms, but this unrolled version is significantly
 	// faster.
@@ -1040,7 +1040,7 @@ func (f *nfieldVal) Mul2(val *nfieldVal, val2 *nfieldVal) *nfieldVal {
 //
 // The nfield value is returned to support chaining.  This enables syntax like:
 // f.Square().Mul(f2) so that f = f^2 * f2.
-func (f *nfieldVal) Square() *nfieldVal {
+func (f *NFieldVal) Square() *NFieldVal {
 	return f.SquareVal(f)
 }
 
@@ -1051,7 +1051,7 @@ func (f *nfieldVal) Square() *nfieldVal {
 //
 // The nfield value is returned to support chaining.  This enables syntax like:
 // f3.SquareVal(f).Mul(f) so that f3 = f^2 * f = f^3.
-func (f *nfieldVal) SquareVal(val *nfieldVal) *nfieldVal {
+func (f *NFieldVal) SquareVal(val *NFieldVal) *NFieldVal {
 	// This could be done with a couple of for loops and an array to store
 	// the intermediate terms, but this unrolled version is significantly
 	// faster.
@@ -1304,7 +1304,7 @@ func (f *nfieldVal) SquareVal(val *nfieldVal) *nfieldVal {
 //
 // The nfield value is returned to support chaining.  This enables syntax like:
 // f.Inverse().Mul(f2) so that f = f^-1 * f2.
-func (f *nfieldVal) Inverse() *nfieldVal {
+func (f *NFieldVal) Inverse() *NFieldVal {
 	// Fermat's little theorem states that for a nonzero number a and prime
 	// prime p, a^(p-1) = 1 (mod p).  Since the multipliciative inverse is
 	// a*b = 1 (mod p), it follows that b = a*a^(p-2) = a^(p-1) = 1 (mod p).
@@ -1319,7 +1319,7 @@ func (f *nfieldVal) Inverse() *nfieldVal {
 	// 2^256 - 432420386565659656852420866394968145601.
 	//
 	// This has a cost of 259 nfield squarings and 64 nfield multiplications.
-	var a2, a3, a4, a5, a6, a8, a9, a10, a11, a21, a42, a63, a1019, a1023 nfieldVal
+	var a2, a3, a4, a5, a6, a8, a9, a10, a11, a21, a42, a63, a1019, a1023 NFieldVal
 	a2.SquareVal(f)
 	a3.Mul2(&a2, f)
 	a4.SquareVal(&a2)
@@ -1443,7 +1443,7 @@ func (f *nfieldVal) Inverse() *nfieldVal {
 }
 
 // Cmp returns -1 if f < val, 0 if f == val, 1 if f > val
-func (f *nfieldVal) Cmp(val *nfieldVal) int {
+func (f *NFieldVal) Cmp(val *NFieldVal) int {
 	f.Normalize()
 	val.Normalize()
 	if f.n[9] < val.n[9] {
@@ -1492,7 +1492,7 @@ func (f *nfieldVal) Cmp(val *nfieldVal) int {
 
 // Magnitude computes val*val2 / N, rounded down.
 // This isn't precise for some reason, but will be within 2 of the big.Int
-func (f *nfieldVal) Magnitude(val, val2 *nfieldVal) *nfieldVal {
+func (f *NFieldVal) Magnitude(val, val2 *NFieldVal) *NFieldVal {
 	// This could be done with a couple of for loops and an array to store
 	// the intermediate terms, but this unrolled version is significantly
 	// faster.
@@ -1740,12 +1740,12 @@ func (f *nfieldVal) Magnitude(val, val2 *nfieldVal) *nfieldVal {
 	return f
 }
 
-func (f *nfieldVal) DebugPrint() {
+func (f *NFieldVal) DebugPrint() {
 
 	fmt.Printf("%x %x %x %x %x\n", f.n[0], f.n[1], f.n[2], f.n[3], f.n[4])
 	fmt.Printf("%x %x %x %x %x\n", f.n[5], f.n[6], f.n[7], f.n[8], f.n[9])
 }
 
-func (f *nfieldVal) BitLen() int {
+func (f *NFieldVal) BitLen() int {
 	return 256
 }
