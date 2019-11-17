@@ -14,3 +14,7 @@ clean:
 test:
 	@go test -count=1 -race -cover ./...
 .PHONY: test
+
+bench:
+	@go test -run=Bench -bench=. ./...
+.PHONY: bench
