@@ -6,6 +6,7 @@
 package nfield
 
 import (
+	"bytes"
 	"crypto/rand"
 	"fmt"
 	"math/big"
@@ -940,6 +941,35 @@ func TestNfieldMagnitudeRand(t *testing.T) {
 	}
 	if failures > 0 {
 		t.Errorf("Errored %d times", failures)
+	}
+}
+
+// TestNfieldBytes tests setting and reading bytes correctness by doing the
+// same calculation with Big.Int
+func TestNfieldBytes(t *testing.T) {
+	N := 32
+	for i := 0; i < 1000; i++ {
+		data := make([]byte, N)
+		_, err := rand.Read(data)
+		if err != nil {
+			t.Fatalf("failed to read random data")
+		}
+		a := new(big.Int).SetBytes(data)
+		aN := new(NFieldVal).SetByteSlice(a.Bytes())
+
+		astr := fmt.Sprintf("%064x", a)
+		if aN.String() != astr {
+			t.Fatalf("expected strings to be the same, was not: %v %v", aN.String(), astr)
+		}
+
+		// Leading zeros are omitted from the byte slice so this can end up being 31 sometimes.
+		if len(a.Bytes()) != N {
+			t.Logf("unexpected length returned from bit.Int.Bytes(): %d", len(a.Bytes()))
+		} else {
+			if !bytes.Equal(a.Bytes(), aN.Bytes()[:]) {
+				t.Fatalf("expected bytes to be the same, was not: %v %v", a.Bytes(), aN.Bytes()[:])
+			}
+		}
 	}
 }
 
