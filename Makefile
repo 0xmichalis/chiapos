@@ -18,3 +18,8 @@ test:
 bench:
 	@go test -run=Bench -bench=. ./...
 .PHONY: bench
+
+verify:
+	@go vet ./...
+	@./hack/verify_format.sh
+.PHONY: verify

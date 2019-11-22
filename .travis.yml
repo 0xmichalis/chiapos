@@ -1,0 +1,9 @@
+language: go
+go:
+  - release
+  - tip
+
+script:
+  - make build
+  - make verify
+  - make test
