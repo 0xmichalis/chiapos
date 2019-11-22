@@ -87,7 +87,7 @@ func (f *F1) Calculate(x uint64) uint64 {
 		f.key.Encrypt(q1Cipher[:], data)
 		part2 := new(big.Int).SetBytes(q1Cipher[:])
 		part2 = utils.Trunc(part2, 0, r.Uint64()+f.k-kBlockSizeBits, kBlockSizeBits)
-		res = utils.Concat(f.k, part1.Uint64(), part2.Uint64())
+		res = utils.Concat(uint64(part2.BitLen()), part1.Uint64(), part2.Uint64())
 	}
 
 	f1x := utils.ConcatExtended(res.Uint64(), x)

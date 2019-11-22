@@ -16,11 +16,10 @@ func Concat(k uint64, xs ...uint64) *big.Int {
 	case 0:
 		return big.NewInt(0)
 	case 1:
-		return new(big.Int).SetUint64(Normalise(xs[0], k))
+		return new(big.Int).SetUint64(xs[0])
 	}
 	res := big.NewInt(0)
 	for _, x := range xs {
-		x = Normalise(x, k)
 		bigX := new(big.Int).SetUint64(x)
 		res.Lsh(res, uint(k)).Add(res, bigX)
 	}
