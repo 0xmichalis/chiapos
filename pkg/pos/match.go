@@ -1,15 +1,17 @@
 package pos
 
+import "github.com/kargakis/gochia/pkg/parameters"
+
 // Match is a matching function.
 func Match(left, right uint64) bool {
-	if BucketID(left)+1 != BucketID(right) {
+	if parameters.BucketID(left)+1 != parameters.BucketID(right) {
 		return false
 	}
-	bIDLeft, cIDLeft := GetIDs(left)
-	bIDRight, cIDRight := GetIDs(right)
-	for m := uint64(0); m < paramM; m++ {
-		firstCondition := (bIDRight-bIDLeft)%paramB == m%paramB
-		secondCondition := (cIDRight-cIDLeft)%paramC == (2*m+(BucketID(left)%2))^2%paramC
+	bIDLeft, cIDLeft := parameters.GetIDs(left)
+	bIDRight, cIDRight := parameters.GetIDs(right)
+	for m := uint64(0); m < parameters.ParamM; m++ {
+		firstCondition := (bIDRight-bIDLeft)%parameters.ParamB == m%parameters.ParamB
+		secondCondition := (cIDRight-cIDLeft)%parameters.ParamC == (2*m+(parameters.BucketID(left)%2))^2%parameters.ParamC
 		if firstCondition && secondCondition {
 			return true
 		}

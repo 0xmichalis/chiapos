@@ -90,7 +90,7 @@ func (f *F1) Calculate(x uint64) uint64 {
 		res = utils.Concat(f.k, part1.Uint64(), part2.Uint64())
 	}
 
-	f1x := utils.Concat(f.k, res.Uint64(), x%paramM).Uint64()
+	f1x := utils.ConcatExtended(res.Uint64(), x)
 	// fmt.Printf("Calculated f1(x)=%d for x=%d\n", f1x, x)
 	return f1x
 }
