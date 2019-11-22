@@ -31,7 +31,7 @@ func Trunc(x *big.Int, a, b, k uint64) *big.Int {
 	x.Rsh(x, uint(k-b))
 	if a > 0 {
 		least := big.NewInt(1)
-		least.Lsh(least, uint(a))
+		least.Lsh(least, uint(b-a))
 		x.Mod(x, least)
 	}
 	return x

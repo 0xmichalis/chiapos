@@ -81,7 +81,7 @@ func (f *F1) Calculate(x uint64) uint64 {
 	if r.Uint64()+f.k <= kBlockSizeBits {
 		res = utils.Trunc(res, r.Uint64(), r.Uint64()+f.k, kBlockSizeBits)
 	} else {
-		part1 := utils.Trunc(res, r.Uint64(), f.k, kBlockSizeBits)
+		part1 := utils.Trunc(res, r.Uint64(), kBlockSizeBits, kBlockSizeBits)
 		var q1Cipher [16]byte
 		data := utils.FillToBlock(q.Add(q, big.NewInt(1)).Bytes())
 		f.key.Encrypt(q1Cipher[:], data)
