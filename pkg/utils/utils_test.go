@@ -22,11 +22,11 @@ func TestConcat(t *testing.T) {
 			want: big.NewInt(36),
 		},
 		{
-			name: "concat will truncate to k",
+			name: "concat will not truncate to k",
 			x:    bits.Reverse64(1),
 			y:    bits.Reverse64(1),
 			k:    57,
-			want: zeroInt.SetBit(zeroInt, 113, 1).SetBit(zeroInt, 56, 1),
+			want: zeroInt.SetBit(zeroInt, 120, 1).SetBit(zeroInt, 63, 1),
 		},
 	}
 
