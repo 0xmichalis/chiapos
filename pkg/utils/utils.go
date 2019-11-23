@@ -3,7 +3,6 @@ package utils
 import (
 	"crypto/aes"
 	"math/big"
-	"math/bits"
 
 	"github.com/kargakis/gochia/pkg/parameters"
 )
@@ -44,22 +43,6 @@ func Trunc(x *big.Int, a, b, k uint64) *big.Int {
 		x.Mod(x, least)
 	}
 	return x
-}
-
-// IsAtMostKBits returns whether the provided number x is at
-// most k bits.
-func IsAtMostKBits(x, k uint64) bool {
-	return k >= uint64(bits.Len64(x))
-}
-
-// Normalise normalises x if x is bigger than k bits
-// by truncating x's least significant bits until x
-// is k bits long.
-func Normalise(x, k uint64) uint64 {
-	if IsAtMostKBits(x, k) {
-		return x
-	}
-	return x >> (uint64(bits.Len64(x)) - k)
 }
 
 // FillToBlock fills the provided byte slice with leading zeroes
