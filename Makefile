@@ -1,3 +1,11 @@
+PWD = $(shell pwd)
+TOOLS = tools
+GOBIN = ${PWD}/${TOOLS}
+PATH := ${GOBIN}:$(PATH)
+
+bench:
+	@go test -run=Bench -bench=. ./...
+.PHONY: bench
 
 build: build-binaries
 	@go build ./...
@@ -15,9 +23,11 @@ test:
 	@go test -count=1 -race -cover ./...
 .PHONY: test
 
-bench:
-	@go test -run=Bench -bench=. ./...
-.PHONY: bench
+tools: ${TOOLS}/goimports
+.PHONY: tools
+
+${TOOLS}/goimports: go.sum
+	@go build -o ${TOOLS}/goimports golang.org/x/tools/cmd/goimports
 
 verify:
 	@go vet ./...
