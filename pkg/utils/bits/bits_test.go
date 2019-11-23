@@ -2,14 +2,15 @@ package bits_test
 
 import (
 	"math/big"
+	"math/bits"
 	"testing"
 
-	"github.com/kargakis/gochia/pkg/utils/bits"
+	mybits "github.com/kargakis/gochia/pkg/utils/bits"
 )
 
 func TestUint64ToBytes(t *testing.T) {
 	var n uint64 = 1000
-	nBytes := bits.Uint64ToBytes(n)
+	nBytes := mybits.Uint64ToBytes(n)
 	bigN := new(big.Int).SetBytes(nBytes)
 	if bigN.Uint64() != n {
 		t.Errorf("expected big.Int(n) to be %d, got %d", n, bigN.Uint64())
@@ -25,8 +26,63 @@ func TestBytesToUint64(t *testing.T) {
 		nBytes[i] = bigNBytes[i-(8-len(bigNBytes))]
 	}
 
-	n := bits.BytesToUint64(nBytes)
+	n := mybits.BytesToUint64(nBytes)
 	if bigN.Uint64() != n {
 		t.Errorf("expected n to be %d, got %d", bigN.Uint64(), n)
+	}
+}
+
+func TestIsAtMostKBits(t *testing.T) {
+	tests := []struct {
+		name   string
+		x      uint64
+		k      uint64
+		expect bool
+	}{
+		{
+			name:   "is",
+			x:      uint64(bits.Reverse32(1)),
+			k:      32,
+			expect: true,
+		},
+		{
+			name:   "is not",
+			x:      uint64(bits.Reverse64(1)),
+			k:      32,
+			expect: false,
+		},
+	}
+
+	for _, tt := range tests {
+		got := mybits.IsAtMostKBits(tt.x, tt.k)
+		if got != tt.expect {
+			t.Errorf("%s: expected %t, got %t (bit length: %d)", tt.name, tt.expect, got, bits.Len64(tt.x))
+		}
+	}
+}
+
+func TestNormalise(t *testing.T) {
+	tests := []struct {
+		x      uint64
+		k      uint64
+		expect uint64
+	}{
+		{
+			x:      uint64(bits.Reverse32(1)),
+			k:      32,
+			expect: uint64(bits.Reverse32(1)),
+		},
+		{
+			x:      uint64(bits.Reverse64(1)),
+			k:      32,
+			expect: uint64(bits.Reverse32(1)),
+		},
+	}
+
+	for i, tt := range tests {
+		got := mybits.Normalise(tt.x, tt.k)
+		if got != tt.expect {
+			t.Errorf("tc #%d: expected %d (bit length: %d), got %d (bit length: %d)", i+1, tt.expect, bits.Len64(tt.expect), got, bits.Len64(got))
+		}
 	}
 }
