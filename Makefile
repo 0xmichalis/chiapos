@@ -29,7 +29,7 @@ tools: ${TOOLS}/goimports
 ${TOOLS}/goimports: go.sum
 	@go build -o ${TOOLS}/goimports golang.org/x/tools/cmd/goimports
 
-verify:
+verify: ${TOOLS}/goimports
 	@go vet ./...
 	@./hack/verify_format.sh
 .PHONY: verify
