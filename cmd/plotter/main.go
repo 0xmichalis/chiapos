@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"syscall"
 	"time"
 
 	"github.com/kargakis/gochia/pkg/pos"
@@ -15,6 +16,7 @@ var (
 	k        = flag.Uint64("k", 15, "Storage parameter")
 	plotPath = flag.String("f", "", "Final path to the plot")
 	keyPath  = flag.String("key", "", "Path to key to be used as a plot seed")
+	availMem = flag.Uint64("m", 20*1024*1024, "Max memory to use when plotting. Defaults to all OS available memory when set to zero.")
 )
 
 func main() {
@@ -48,9 +50,19 @@ func main() {
 		plot = plotFile.Name()
 	}
 
+	if *availMem == 0 {
+		si := &syscall.Sysinfo_t{}
+		if err := syscall.Sysinfo(si); err != nil {
+			fmt.Printf("cannot read system info to get available memory: %v", err)
+			os.Exit(1)
+		}
+		*availMem = si.Freeram
+	}
+	fmt.Printf("Available memory: %dMB\n", *availMem/(1024*1024))
+
 	fmt.Printf("Generating plot at %s\n", plot)
 	plotStart := time.Now()
-	if err := pos.WritePlotFile(plot, *k, nil, key[:]); err != nil {
+	if err := pos.WritePlotFile(plot, *k, *availMem, nil, key[:]); err != nil {
 		fmt.Printf("cannot write plot: %v", err)
 		os.Exit(1)
 	}

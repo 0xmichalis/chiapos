@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"math"
 	"os"
-	"syscall"
 	"time"
 
 	"github.com/kargakis/gochia/pkg/parameters"
@@ -104,7 +103,7 @@ func CalculateMaxDeltasSize(k, tableIndex int) int {
 // proofs of space in it. First, F1 is computed, which is special since it uses
 // AES256, and each encryption provides multiple output values. Then, the rest of the
 // f functions are computed, and a sort on disk happens for each table.
-func WritePlotFile(filename string, k uint64, memo, id []byte) error {
+func WritePlotFile(filename string, k, availableMemory uint64, memo, id []byte) error {
 	file, err := os.Create(filename)
 	if err != nil {
 		return err
@@ -112,13 +111,6 @@ func WritePlotFile(filename string, k uint64, memo, id []byte) error {
 	if _, err := WriteHeader(file, k, memo, id); err != nil {
 		return err
 	}
-
-	si := &syscall.Sysinfo_t{}
-	if err := syscall.Sysinfo(si); err != nil {
-		return err
-	}
-	unit := uint64(si.Unit) * 1024 * 1024 // MB
-	fmt.Printf("Available memory: %dMB\n", si.Freeram/unit)
 
 	maxNumber := uint64(math.Pow(2, float64(k)))
 	maxDigits := countDigits(maxNumber - 1)
