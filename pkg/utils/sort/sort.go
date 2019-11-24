@@ -18,17 +18,26 @@ func bucketIndex(entry uint64, b int) string {
 // SortOnDisk performs sorting on the given file on disk, given begin which
 // is the start of the data in the file in need of sorting, and availableMemory
 // is the available memory in which sorting can be done.
-func SortOnDisk(file *os.File, begin int, availableMemory uint64) error {
-	bucketSizes := make([]int, 16)
-	bucketStarts := make([]int, 16)
+func SortOnDisk(file *os.File, begin, maxSize, availableMemory, entryLen uint64) error {
+	// TODO: FIXME - note that we need to take into account the
+	// memory that will be used by loading the unsorted buckets,
+	// the sorted buckets that are currently in memory, plus any
+	// extra memory consumed by SortInMemory.
+	if availableMemory > maxSize-begin {
+		// if we can sort in memory, do that
+		SortInMemory(nil)
+		return nil
+	}
 
-	_ = bucketSizes
-	_ = bucketStarts
+	bucketSizes := make([]uint64, 16)
+	bucketBegins := make([]uint64, 16)
+	filePositions := make([]uint64, 16)
 
-	var total int
-	_ = total
+	var total uint64
 	for i := 0; i < 16; i++ {
-
+		bucketBegins[i] = total
+		total += bucketSizes[i]
+		filePositions[i] = begin + bucketBegins[i]*entryLen
 	}
 	return nil
 }

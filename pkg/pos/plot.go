@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/kargakis/gochia/pkg/parameters"
+	"github.com/kargakis/gochia/pkg/utils/sort"
 )
 
 const (
@@ -108,7 +109,9 @@ func WritePlotFile(filename string, k, availableMemory uint64, memo, id []byte) 
 	if err != nil {
 		return err
 	}
-	if _, err := WriteHeader(file, k, memo, id); err != nil {
+
+	headerLen, err := WriteHeader(file, k, memo, id)
+	if err != nil {
 		return err
 	}
 
@@ -135,6 +138,9 @@ func WritePlotFile(filename string, k, availableMemory uint64, memo, id []byte) 
 		wrote += n
 	}
 
+	if err := sort.SortOnDisk(file, uint64(headerLen), uint64(wrote+headerLen), availableMemory, uint64(wrote)/maxNumber); err != nil {
+		return err
+	}
 	fmt.Printf("F1 calculations finished in %v (wrote %s)\n", time.Since(start), prettySize(uint64(wrote)))
 
 	return nil
