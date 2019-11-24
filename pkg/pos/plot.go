@@ -120,7 +120,7 @@ func WritePlotFile(filename string, k uint64, memo, id []byte) error {
 	for x := uint64(0); x < uint64(math.Pow(2, float64(k))); x++ {
 		f1x := f1.Calculate(x)
 		// TODO: Batch writes
-		fullyPrint := fmt.Sprintf("%%0%dd,%%0%dd\n", k, k)
+		fullyPrint := fmt.Sprintf("%%0%db,%%0%db\n", k, k)
 		_, err := file.Write([]byte(fmt.Sprintf(fullyPrint, f1x, x)))
 		if err != nil {
 			return err
