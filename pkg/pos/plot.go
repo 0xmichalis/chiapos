@@ -127,6 +127,7 @@ func WritePlotFile(filename string, k, availableMemory uint64, memo, id []byte) 
 	}
 
 	var wrote int
+	// TODO: Try to parallelize and see how it fares CPU-wise
 	for x := uint64(0); x < maxNumber; x++ {
 		f1x := f1.Calculate(x)
 		// TODO: Batch writes
@@ -138,7 +139,7 @@ func WritePlotFile(filename string, k, availableMemory uint64, memo, id []byte) 
 		wrote += n
 	}
 
-	if err := sort.SortOnDisk(file, uint64(headerLen), uint64(wrote+headerLen), availableMemory, uint64(wrote)/maxNumber); err != nil {
+	if err := sort.OnDisk(file, uint64(headerLen), uint64(wrote+headerLen), availableMemory, uint64(wrote)/maxNumber); err != nil {
 		return err
 	}
 	fmt.Printf("F1 calculations finished in %v (wrote %s)\n", time.Since(start), prettySize(uint64(wrote)))

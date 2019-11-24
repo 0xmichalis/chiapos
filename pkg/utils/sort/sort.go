@@ -15,17 +15,17 @@ func bucketIndex(entry uint64, b int) string {
 	return string(mybits.Uint64ToBytes(entry)[:b])
 }
 
-// SortOnDisk performs sorting on the given file on disk, given begin which
+// OnDisk performs sorting on the given file on disk, given begin which
 // is the start of the data in the file in need of sorting, and availableMemory
 // is the available memory in which sorting can be done.
-func SortOnDisk(file *os.File, begin, maxSize, availableMemory, entryLen uint64) error {
+func OnDisk(file *os.File, begin, maxSize, availableMemory, entryLen uint64) error {
 	// TODO: FIXME - note that we need to take into account the
 	// memory that will be used by loading the unsorted buckets,
 	// the sorted buckets that are currently in memory, plus any
 	// extra memory consumed by SortInMemory.
 	if availableMemory > maxSize-begin {
 		// if we can sort in memory, do that
-		SortInMemory(nil)
+		InMemory(nil)
 		return nil
 	}
 
@@ -42,8 +42,8 @@ func SortOnDisk(file *os.File, begin, maxSize, availableMemory, entryLen uint64)
 	return nil
 }
 
-// SortInMemory sorts the provided entries in memory.
-func SortInMemory(entries []uint64) {
+// InMemory sorts the provided entries in memory.
+func InMemory(entries []uint64) {
 	bitsNum := bits.Len64(uint64(2 * len(entries)))
 	b := 1 << bitsNum
 
