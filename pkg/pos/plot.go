@@ -5,6 +5,8 @@ import (
 	"math"
 	"os"
 	"time"
+
+	"github.com/kargakis/gochia/pkg/parameters"
 )
 
 const (
@@ -110,6 +112,10 @@ func WritePlotFile(filename string, k uint64, memo, id []byte) error {
 		return err
 	}
 
+	maxNumber := uint64(math.Pow(2, float64(k)))
+	maxDigits := countDigits(maxNumber - 1)
+	maxEncryptedDigits := countDigits(uint64(math.Pow(2, float64(k+parameters.ParamEXT))) - 1)
+
 	fmt.Println("Computing table 1...")
 	start := time.Now()
 	f1, err := NewF1(k, id)
@@ -117,10 +123,10 @@ func WritePlotFile(filename string, k uint64, memo, id []byte) error {
 		return err
 	}
 
-	for x := uint64(0); x < uint64(math.Pow(2, float64(k))); x++ {
+	for x := uint64(0); x < maxNumber; x++ {
 		f1x := f1.Calculate(x)
 		// TODO: Batch writes
-		fullyPrint := fmt.Sprintf("%%0%db,%%0%db\n", k, k)
+		fullyPrint := fmt.Sprintf("%%0%dd,%%0%dd\n", maxEncryptedDigits, maxDigits)
 		_, err := file.Write([]byte(fmt.Sprintf(fullyPrint, f1x, x)))
 		if err != nil {
 			return err
@@ -129,6 +135,13 @@ func WritePlotFile(filename string, k uint64, memo, id []byte) error {
 	fmt.Printf("F1 calculations finished in %v\n", time.Since(start))
 
 	return nil
+}
+
+func countDigits(number uint64) int {
+	if number < 10 {
+		return 1
+	}
+	return 1 + countDigits(number/10)
 }
 
 // WriteHeader writes the plot file header to a file

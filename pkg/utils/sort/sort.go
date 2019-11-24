@@ -15,7 +15,10 @@ func bucketIndex(entry uint64, b int) string {
 	return string(mybits.Uint64ToBytes(entry)[:b])
 }
 
-func SortOnDisk(file *os.File, availableMemory uint64) error {
+// SortOnDisk performs sorting on the given file on disk, given begin which
+// is the start of the data in the file in need of sorting, and availableMemory
+// is the available memory in which sorting can be done.
+func SortOnDisk(file *os.File, begin int, availableMemory uint64) error {
 	bucketSizes := make([]int, 16)
 	bucketStarts := make([]int, 16)
 

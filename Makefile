@@ -17,6 +17,7 @@ build-binaries:
 
 clean:
 	@rm -rf $(PWD)/bin
+	@rm -rf /tmp/plot-*
 .PHONY: clean
 
 test:
