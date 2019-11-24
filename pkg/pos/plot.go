@@ -123,16 +123,19 @@ func WritePlotFile(filename string, k, availableMemory uint64, memo, id []byte) 
 		return err
 	}
 
+	var wrote int
 	for x := uint64(0); x < maxNumber; x++ {
 		f1x := f1.Calculate(x)
 		// TODO: Batch writes
 		fullyPrint := fmt.Sprintf("%%0%dd,%%0%dd\n", maxEncryptedDigits, maxDigits)
-		_, err := file.Write([]byte(fmt.Sprintf(fullyPrint, f1x, x)))
+		n, err := file.Write([]byte(fmt.Sprintf(fullyPrint, f1x, x)))
 		if err != nil {
 			return err
 		}
+		wrote += n
 	}
-	fmt.Printf("F1 calculations finished in %v\n", time.Since(start))
+
+	fmt.Printf("F1 calculations finished in %v (wrote %s)\n", time.Since(start), prettySize(uint64(wrote)))
 
 	return nil
 }
@@ -142,6 +145,26 @@ func countDigits(number uint64) int {
 		return 1
 	}
 	return 1 + countDigits(number/10)
+}
+
+func prettySize(size uint64) string {
+	switch c := class(size); c {
+	case 0: // bytes
+		return fmt.Sprintf("%d B", size)
+	case 1: // kilobytes
+		return fmt.Sprintf("%d KB", size/1024)
+	case 2: // megabytes
+		return fmt.Sprintf("%d MB", size/(1024*1024))
+	default: // gigabytes
+		return fmt.Sprintf("%d GB", size/(1024*1024*1024))
+	}
+}
+
+func class(size uint64) int {
+	if size < 1024 {
+		return 0
+	}
+	return 1 + class(size/1024)
 }
 
 // WriteHeader writes the plot file header to a file
