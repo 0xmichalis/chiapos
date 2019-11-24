@@ -106,7 +106,7 @@ func WritePlotFile(filename string, k uint64, memo, id []byte) error {
 	if err != nil {
 		return err
 	}
-	if err := WriteHeader(file, k, memo, id); err != nil {
+	if _, err := WriteHeader(file, k, memo, id); err != nil {
 		return err
 	}
 
@@ -137,23 +137,32 @@ func WritePlotFile(filename string, k uint64, memo, id []byte) error {
 // 1 byte    - k
 // 2 bytes   - memo length
 // x bytes   - memo
-func WriteHeader(file *os.File, k uint64, memo, id []byte) error {
-	if _, err := file.Write([]byte("Proof of Space Plot")); err != nil {
-		return err
+func WriteHeader(file *os.File, k uint64, memo, id []byte) (int, error) {
+	n, err := file.Write([]byte("Proof of Space Plot"))
+	if err != nil {
+		return n, err
 	}
-	if _, err := file.Write(id); err != nil {
-		return err
+
+	nmore, err := file.Write(id)
+	n += nmore
+	if err != nil {
+		return n, err
 	}
-	if _, err := file.Write([]byte{byte(k)}); err != nil {
-		return err
+
+	nmore, err = file.Write([]byte{byte(k)})
+	n += nmore
+	if err != nil {
+		return n, err
 	}
+
 	sizeBuf := make([]byte, 2)
 	sizeBuf[0] = byte(len(memo))
-	if _, err := file.Write(sizeBuf); err != nil {
-		return err
+	nmore, err = file.Write(sizeBuf)
+	n += nmore
+	if err != nil {
+		return n, err
 	}
-	if _, err := file.Write(memo); err != nil {
-		return err
-	}
-	return nil
+
+	nmore, err = file.Write(memo)
+	return n + nmore, err
 }
