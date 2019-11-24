@@ -130,7 +130,7 @@ func WritePlotFile(filename string, k, availableMemory uint64, memo, id []byte) 
 	for x := uint64(0); x < maxNumber; x++ {
 		f1x := f1.Calculate(x)
 		// TODO: Batch writes
-		fullyPrint := fmt.Sprintf("%%0%dd,%%0%dd\n", maxEncryptedDigits, maxDigits)
+		fullyPrint := fmt.Sprintf("%%0%dx,%%0%dx\n", maxEncryptedDigits, maxDigits)
 		n, err := file.Write([]byte(fmt.Sprintf(fullyPrint, f1x, x)))
 		if err != nil {
 			return err
@@ -147,10 +147,10 @@ func WritePlotFile(filename string, k, availableMemory uint64, memo, id []byte) 
 }
 
 func countDigits(number uint64) int {
-	if number < 10 {
+	if number < 16 {
 		return 1
 	}
-	return 1 + countDigits(number/10)
+	return 1 + countDigits(number/16)
 }
 
 func prettySize(size uint64) string {
