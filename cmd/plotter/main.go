@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/kargakis/gochia/pkg/fs"
 	"github.com/kargakis/gochia/pkg/pos"
 )
 
@@ -37,19 +38,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	// If a plot path is not provided, use a temporary file
-	var plot string
-	if *plotPath != "" {
-		plot = *plotPath
-	} else {
-		plotFile, err := ioutil.TempFile("", "plot-")
-		if err != nil {
-			fmt.Printf("cannot set up plot file: %v", err)
-			os.Exit(1)
-		}
-		plot = plotFile.Name()
-	}
-
 	if *availMem == 0 {
 		si := &syscall.Sysinfo_t{}
 		if err := syscall.Sysinfo(si); err != nil {
@@ -60,9 +48,15 @@ func main() {
 	}
 	fmt.Printf("Available memory: %dMB\n", *availMem/(1024*1024))
 
-	fmt.Printf("Generating plot at %s\n", plot)
+	file, filename, err := fs.NewOSFile(*plotPath)
+	if err != nil {
+		fmt.Printf("cannot crae plot file: %v", err)
+		os.Exit(1)
+	}
+
+	fmt.Printf("Generating plot at %s\n", filename)
 	plotStart := time.Now()
-	if err := pos.WritePlotFile(plot, *k, *availMem, nil, key[:]); err != nil {
+	if err := pos.WritePlotFile(file, *k, *availMem, nil, key[:]); err != nil {
 		fmt.Printf("cannot write plot: %v", err)
 		os.Exit(1)
 	}
