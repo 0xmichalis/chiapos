@@ -26,7 +26,7 @@
       </envs>
     </TaskOptions>
     <TaskOptions isEnabled="true">
-      <option name="arguments" value="-w $FilePath$" />
+      <option name="arguments" value="-local github.com/kargakis/gochia -w $FilePath$" />
       <option name="checkSyntaxErrors" value="true" />
       <option name="description" />
       <option name="exitCodeBehavior" value="ERROR" />

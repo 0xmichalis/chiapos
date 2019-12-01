@@ -9,12 +9,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/spf13/afero"
-
 	"github.com/kargakis/gochia/pkg/pos"
 )
-
-var AppFs = afero.NewOsFs()
 
 var (
 	k        = flag.Uint64("k", 15, "Storage parameter")
@@ -50,15 +46,10 @@ func main() {
 		*availMem = si.Freeram
 	}
 	fmt.Printf("Available memory: %dMB\n", *availMem/(1024*1024))
-	file, err := AppFs.Create(*plotPath)
-	if err != nil {
-		fmt.Printf("cannot crae plot file: %v", err)
-		os.Exit(1)
-	}
 
-	fmt.Printf("Generating plot at %s\n", file.Name())
+	fmt.Printf("Generating plot at %s\n", *plotPath)
 	plotStart := time.Now()
-	if err := pos.WritePlotFile(file, *k, *availMem, nil, key[:]); err != nil {
+	if err := pos.WritePlotFile(*plotPath, *k, *availMem, nil, key[:]); err != nil {
 		fmt.Printf("cannot write plot: %v", err)
 		os.Exit(1)
 	}

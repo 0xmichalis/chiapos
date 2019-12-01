@@ -99,13 +99,20 @@ func CalculateMaxDeltasSize(k, tableIndex int) int {
 	return byteAlign(int(bits))
 }
 
+var AppFs = afero.NewOsFs()
+
 // This is Phase 1, or forward propagation. During this phase, all of the 7 tables,
 // and f functions, are evaluated. The result is an intermediate plot file, that is
 // several times larger than what the final file will be, but that has all of the
 // proofs of space in it. First, F1 is computed, which is special since it uses
 // AES256, and each encryption provides multiple output values. Then, the rest of the
 // f functions are computed, and a sort on disk happens for each table.
-func WritePlotFile(file afero.File, k, availableMemory uint64, memo, id []byte) error {
+func WritePlotFile(filename string, k, availableMemory uint64, memo, id []byte) error {
+	file, err := AppFs.Create(filename)
+	if err != nil {
+		return err
+	}
+
 	headerLen, err := WriteHeader(file, k, memo, id)
 	if err != nil {
 		return err
@@ -127,6 +134,7 @@ func WritePlotFile(file afero.File, k, availableMemory uint64, memo, id []byte) 
 	for x := uint64(0); x < maxNumber; x++ {
 		f1x := f1.Calculate(x)
 		// TODO: Batch writes
+		// TODO: Write in binary instead of text format (FlatBuffers?)
 		fullyPrint := fmt.Sprintf("%%0%dx,%%0%dx\n", maxEncryptedDigits, maxDigits)
 		n, err := file.Write([]byte(fmt.Sprintf(fullyPrint, f1x, x)))
 		if err != nil {
@@ -135,7 +143,17 @@ func WritePlotFile(file afero.File, k, availableMemory uint64, memo, id []byte) 
 		wrote += n
 	}
 
-	if err := sort.OnDisk(file, uint64(headerLen), uint64(wrote+headerLen), availableMemory, uint64(wrote)/maxNumber); err != nil {
+	// if we know beforehand there is not enough space
+	// to sort in memory, we can prepare the spare file
+	var spare afero.File
+	if uint64(wrote) > availableMemory {
+		spare, err = AppFs.Create(filename + "-spare")
+		if err != nil {
+			return err
+		}
+	}
+
+	if err := sort.OnDisk(file, spare, uint64(headerLen), uint64(wrote+headerLen), availableMemory, uint64(wrote)/maxNumber, maxNumber); err != nil {
 		return err
 	}
 	fmt.Printf("F1 calculations finished in %v (wrote %s)\n", time.Since(start), prettySize(uint64(wrote)))
