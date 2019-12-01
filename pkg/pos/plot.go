@@ -2,9 +2,10 @@ package pos
 
 import (
 	"fmt"
-	"io"
 	"math"
 	"time"
+
+	"github.com/spf13/afero"
 
 	"github.com/kargakis/gochia/pkg/parameters"
 	"github.com/kargakis/gochia/pkg/utils/sort"
@@ -104,7 +105,7 @@ func CalculateMaxDeltasSize(k, tableIndex int) int {
 // proofs of space in it. First, F1 is computed, which is special since it uses
 // AES256, and each encryption provides multiple output values. Then, the rest of the
 // f functions are computed, and a sort on disk happens for each table.
-func WritePlotFile(file io.ReadWriteSeeker, k, availableMemory uint64, memo, id []byte) error {
+func WritePlotFile(file afero.File, k, availableMemory uint64, memo, id []byte) error {
 	headerLen, err := WriteHeader(file, k, memo, id)
 	if err != nil {
 		return err
@@ -175,7 +176,7 @@ func class(size uint64) int {
 // 1 byte    - k
 // 2 bytes   - memo length
 // x bytes   - memo
-func WriteHeader(file io.ReadWriteSeeker, k uint64, memo, id []byte) (int, error) {
+func WriteHeader(file afero.File, k uint64, memo, id []byte) (int, error) {
 	n, err := file.Write([]byte("Proof of Space Plot"))
 	if err != nil {
 		return n, err

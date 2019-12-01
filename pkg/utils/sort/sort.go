@@ -1,8 +1,9 @@
 package sort
 
 import (
-	"io"
 	"math/bits"
+
+	"github.com/spf13/afero"
 
 	mybits "github.com/kargakis/gochia/pkg/utils/bits"
 )
@@ -18,7 +19,7 @@ func bucketIndex(entry uint64, b int) string {
 // OnDisk performs sorting on the given file on disk, given begin which
 // is the start of the data in the file in need of sorting, and availableMemory
 // is the available memory in which sorting can be done.
-func OnDisk(file io.ReadWriteSeeker, begin, maxSize, availableMemory, entryLen uint64) error {
+func OnDisk(file afero.File, begin, maxSize, availableMemory, entryLen uint64) error {
 	// TODO: FIXME - note that we need to take into account the
 	// memory that will be used by loading the unsorted buckets,
 	// the sorted buckets that are currently in memory, plus any
