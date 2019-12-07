@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/afero"
 
-	"github.com/kargakis/gochia/pkg/parameters"
+	"github.com/kargakis/gochia/pkg/serialize"
 	"github.com/kargakis/gochia/pkg/utils/sort"
 )
 
@@ -119,8 +119,8 @@ func WritePlotFile(filename string, k, availableMemory uint64, memo, id []byte) 
 	}
 
 	maxNumber := uint64(math.Pow(2, float64(k)))
-	maxDigits := countDigits(maxNumber - 1)
-	maxEncryptedDigits := countDigits(uint64(math.Pow(2, float64(k+parameters.ParamEXT))) - 1)
+	//maxDigits := countDigits(maxNumber - 1)
+	//maxEncryptedDigits := countDigits(uint64(math.Pow(2, float64(k+parameters.ParamEXT))) - 1)
 
 	fmt.Println("Computing table 1...")
 	start := time.Now()
@@ -133,15 +133,13 @@ func WritePlotFile(filename string, k, availableMemory uint64, memo, id []byte) 
 	// TODO: Try to parallelize and see how it fares CPU-wise
 	for x := uint64(0); x < maxNumber; x++ {
 		f1x := f1.Calculate(x)
-		// TODO: Batch writes
-		// TODO: Write in binary instead of text format (FlatBuffers?)
-		fullyPrint := fmt.Sprintf("%%0%dx,%%0%dx\n", maxEncryptedDigits, maxDigits)
-		n, err := file.Write([]byte(fmt.Sprintf(fullyPrint, f1x, x)))
+		n, err := serialize.Write(file, int64(headerLen+wrote), x, f1x)
 		if err != nil {
 			return err
 		}
 		wrote += n
 	}
+	fmt.Printf("Wrote %d entries (size: %s)\n", maxNumber, prettySize(uint64(wrote)))
 
 	// if we know beforehand there is not enough space
 	// to sort in memory, we can prepare the spare file
@@ -152,6 +150,8 @@ func WritePlotFile(filename string, k, availableMemory uint64, memo, id []byte) 
 			return err
 		}
 	}
+
+	fmt.Println("Sorting table 1...")
 
 	if err := sort.OnDisk(file, spare, uint64(headerLen), uint64(wrote+headerLen), availableMemory, uint64(wrote)/maxNumber, maxNumber); err != nil {
 		return err

@@ -50,7 +50,7 @@ func main() {
 	fmt.Printf("Generating plot at %s\n", *plotPath)
 	plotStart := time.Now()
 	if err := pos.WritePlotFile(*plotPath, *k, *availMem, nil, key[:]); err != nil {
-		fmt.Printf("cannot write plot: %v", err)
+		fmt.Printf("cannot write plot: %v\n", err)
 		os.Exit(1)
 	}
 	fmt.Printf("Plotting: OK (%v)\n", time.Since(plotStart))
