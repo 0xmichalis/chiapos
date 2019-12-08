@@ -56,7 +56,7 @@ type entry struct {
 
 func loadEntries(file afero.File, begin, entryLen, entryCount uint64) (entries []entry, err error) {
 	for i := uint64(0); i < entryCount; i++ {
-		x, fx, err := serialize.Read(file, int64(begin+(i*entryLen)), int(entryLen))
+		fx, x, err := serialize.Read(file, int64(begin+(i*entryLen)), int(entryLen))
 		if err != nil {
 			return nil, err
 		}
