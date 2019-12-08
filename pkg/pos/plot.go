@@ -158,6 +158,17 @@ func WritePlotFile(filename string, k, availableMemory uint64, memo, id []byte) 
 	}
 	fmt.Printf("F1 calculations finished in %v (wrote %s)\n", time.Since(start), prettySize(uint64(wrote)))
 
+	fmt.Println("Computing table 2...")
+	start = time.Now()
+	f2, err := NewF2(k, id)
+	if err != nil {
+		return err
+	}
+
+	for x := uint64(0); x < maxNumber; x++ {
+		_ = f2
+	}
+
 	return nil
 }
 

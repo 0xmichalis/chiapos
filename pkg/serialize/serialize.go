@@ -1,6 +1,7 @@
 package serialize
 
 import (
+	"bytes"
 	"encoding/hex"
 	"fmt"
 	"io"
@@ -28,4 +29,35 @@ func Write(file afero.File, offset int64, x, fx uint64) (int, error) {
 	dst = append(dst, xDst...)
 	dst = append(dst, '\n')
 	return file.Write(dst)
+}
+
+func Read(file afero.File, offset int64, entryLen int) (fx uint64, x uint64, err error) {
+	e := make([]byte, entryLen)
+
+	if _, err := file.ReadAt(e, offset); err != nil {
+		return 0, 0, err
+	}
+
+	parts := bytes.Split(e, []byte(","))
+	if len(parts) != 2 {
+		return 0, 0, fmt.Errorf("invalid line read: %v", parts)
+	}
+	// drop delimeter
+	parts[1] = bytes.TrimSpace(parts[1])
+
+	dst := make([]byte, hex.DecodedLen(len(parts[0])))
+	_, err = hex.Decode(dst, parts[0])
+	if err != nil {
+		return 0, 0, fmt.Errorf("cannot decode f(x): %v", err)
+	}
+	fx = mybits.BytesToUint64(dst)
+
+	dst = make([]byte, hex.DecodedLen(len(parts[1])))
+	_, err = hex.Decode(dst, parts[1])
+	if err != nil {
+		return 0, 0, fmt.Errorf("cannot decode x: %v", err)
+	}
+	x = mybits.BytesToUint64(dst)
+
+	return
 }

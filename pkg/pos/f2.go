@@ -7,17 +7,17 @@ import (
 	"github.com/kargakis/gochia/pkg/rraes"
 )
 
-type Fx struct {
+type F2 struct {
 	k   uint64
 	key cipher.Block
 }
 
-func NewFx(k uint64, key []byte) (*Fx, error) {
+func NewF2(k uint64, key []byte) (*F2, error) {
 	if k < kMinPlotSize || k > kMaxPlotSize {
 		return nil, fmt.Errorf("invalid k: %d, valid range: %d - %d", k, kMinPlotSize, kMaxPlotSize)
 	}
 
-	f1 := &Fx{
+	f2 := &F2{
 		k: k,
 	}
 
@@ -28,7 +28,11 @@ func NewFx(k uint64, key []byte) (*Fx, error) {
 	if err != nil {
 		return nil, err
 	}
-	f1.key = block
+	f2.key = block
 
-	return f1, nil
+	return f2, nil
+}
+
+func (f *F2) Calculate(x1, x2 uint64) uint64 {
+	return 0
 }

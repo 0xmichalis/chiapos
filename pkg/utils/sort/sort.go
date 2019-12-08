@@ -1,10 +1,7 @@
 package sort
 
 import (
-	"bytes"
-	"encoding/hex"
 	"fmt"
-	"io"
 	"math/bits"
 	"sort"
 
@@ -47,6 +44,7 @@ func OnDisk(file, spare afero.File, begin, maxSize, availableMemory, entryLen, e
 		bucketBegins[i] = total
 		total += bucketSizes[i]
 		filePositions[i] = begin + bucketBegins[i]*entryLen
+		// TODO: Finish sort on disk
 	}
 	return nil
 }
@@ -56,45 +54,12 @@ type entry struct {
 	x  uint64
 }
 
-func loadEntries(file afero.File, begin, entryLen, entryCount uint64) ([]entry, error) {
-	tmpEntries := make([]byte, entryLen*entryCount)
-	if _, err := file.ReadAt(tmpEntries, int64(begin)); err != nil {
-		return nil, fmt.Errorf("cannot read file at %d: %v", begin, err)
-	}
-
-	// TODO: This will allocate twice as much memory as we should
-	// Maybe use something like FlatBuffers to serialize data on disk
-	var entries []entry
-	buf := bytes.NewBuffer(tmpEntries)
-	for {
-		line, err := buf.ReadBytes('\n')
-		if err == io.EOF {
-			break
-		}
+func loadEntries(file afero.File, begin, entryLen, entryCount uint64) (entries []entry, err error) {
+	for i := uint64(0); i < entryCount; i++ {
+		x, fx, err := serialize.Read(file, int64(begin+(i*entryLen)), int(entryLen))
 		if err != nil {
 			return nil, err
 		}
-		parts := bytes.Split(line, []byte(","))
-		if len(parts) != 2 {
-			return nil, fmt.Errorf("invalid line read: %v", parts)
-		}
-		// drop delimeter
-		parts[1] = bytes.TrimSpace(parts[1])
-
-		dst := make([]byte, hex.DecodedLen(len(parts[0])))
-		_, err = hex.Decode(dst, parts[0])
-		if err != nil {
-			return nil, fmt.Errorf("cannot decode f(x): %v", err)
-		}
-		fx := mybits.BytesToUint64(dst)
-
-		dst = make([]byte, hex.DecodedLen(len(parts[1])))
-		_, err = hex.Decode(dst, parts[1])
-		if err != nil {
-			return nil, fmt.Errorf("cannot decode x: %v", err)
-		}
-		x := mybits.BytesToUint64(dst)
-
 		entries = append(entries, entry{fx: fx, x: x})
 	}
 
