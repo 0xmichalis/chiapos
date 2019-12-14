@@ -15,21 +15,21 @@ var buckets = make(map[string][]entry)
 
 // bucketIndex returns the index of the target bucket for this
 // entry. b is the smallest number such that 2^b >= 2 * num_entries.
-func bucketIndex(entry uint64, b int) string {
-	return string(mybits.Uint64ToBytes(entry)[:b-1])
+func bucketIndex(entry uint64, b, k int) string {
+	return string(mybits.Uint64ToBytes(entry, k)[:b-1])
 }
 
 // OnDisk performs sorting on the given file on disk, given begin which
 // is the start of the data in the file in need of sorting, and availableMemory
 // is the available memory in which sorting can be done.
-func OnDisk(file, spare afero.File, begin, maxSize, availableMemory, entryLen, entryCount uint64) error {
+func OnDisk(file, spare afero.File, begin, maxSize, availableMemory, entryLen, entryCount uint64, k int) error {
 	// TODO: FIXME - note that we need to take into account the
 	// memory that will be used by loading the unsorted buckets,
 	// the sorted buckets that are currently in memory, plus any
 	// extra memory consumed by SortInMemory.
 	if availableMemory > maxSize-begin {
 		// if we can sort in memory, do that
-		return InMemory(file, begin, entryLen, entryCount)
+		return InMemory(file, begin, entryLen, entryCount, k)
 	}
 
 	// The index in these buckets represents the common prefix
@@ -54,9 +54,9 @@ type entry struct {
 	x  uint64
 }
 
-func loadEntries(file afero.File, begin, entryLen, entryCount uint64) (entries []entry, err error) {
+func loadEntries(file afero.File, begin, entryLen, entryCount uint64, k int) (entries []entry, err error) {
 	for i := uint64(0); i < entryCount; i++ {
-		fx, x, err := serialize.Read(file, int64(begin+(i*entryLen)), int(entryLen))
+		fx, x, err := serialize.Read(file, int64(begin+(i*entryLen)), int(entryLen), k)
 		if err != nil {
 			return nil, err
 		}
@@ -67,8 +67,8 @@ func loadEntries(file afero.File, begin, entryLen, entryCount uint64) (entries [
 }
 
 // InMemory sorts the provided entries in memory.
-func InMemory(file afero.File, begin, entryLen, entryCount uint64) error {
-	entries, err := loadEntries(file, begin, entryLen, entryCount)
+func InMemory(file afero.File, begin, entryLen, entryCount uint64, k int) error {
+	entries, err := loadEntries(file, begin, entryLen, entryCount, k)
 	if err != nil {
 		return fmt.Errorf("cannot load entries in memory: %v", err)
 	}
@@ -76,7 +76,7 @@ func InMemory(file afero.File, begin, entryLen, entryCount uint64) error {
 	var bucketIndexes []string
 	b := bits.Len64(uint64(2*len(entries))) / 8
 	for _, e := range entries {
-		bIndex := bucketIndex(e.fx, b)
+		bIndex := bucketIndex(e.fx, b, k)
 		bEntries, ok := buckets[bIndex]
 		if !ok {
 			buckets[bIndex] = []entry{e}
@@ -101,7 +101,7 @@ func InMemory(file afero.File, begin, entryLen, entryCount uint64) error {
 	var wrote int
 	for _, index := range bucketIndexes {
 		for _, e := range buckets[index] {
-			n, err := serialize.Write(file, int64(int(begin)+wrote), e.x, e.fx)
+			n, err := serialize.Write(file, int64(int(begin)+wrote), e.x, e.fx, k)
 			if err != nil {
 				return fmt.Errorf("cannot write sorted values: %v", err)
 			}

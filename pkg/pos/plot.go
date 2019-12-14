@@ -133,7 +133,7 @@ func WritePlotFile(filename string, k, availableMemory uint64, memo, id []byte) 
 	// TODO: Try to parallelize and see how it fares CPU-wise
 	for x := uint64(0); x < maxNumber; x++ {
 		f1x := f1.Calculate(x)
-		n, err := serialize.Write(file, int64(headerLen+wrote), x, f1x)
+		n, err := serialize.Write(file, int64(headerLen+wrote), x, f1x, int(k))
 		if err != nil {
 			return err
 		}
@@ -153,7 +153,7 @@ func WritePlotFile(filename string, k, availableMemory uint64, memo, id []byte) 
 
 	fmt.Println("Sorting table 1...")
 
-	if err := sort.OnDisk(file, spare, uint64(headerLen), uint64(wrote+headerLen), availableMemory, uint64(wrote)/maxNumber, maxNumber); err != nil {
+	if err := sort.OnDisk(file, spare, uint64(headerLen), uint64(wrote+headerLen), availableMemory, uint64(wrote)/maxNumber, maxNumber, int(k)); err != nil {
 		return err
 	}
 	fmt.Printf("F1 calculations finished in %v (wrote %s)\n", time.Since(start), prettySize(uint64(wrote)))
