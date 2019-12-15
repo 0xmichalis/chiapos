@@ -6,40 +6,14 @@ import (
 	"fmt"
 	"math/big"
 
+	"github.com/kargakis/gochia/pkg/parameters"
 	"github.com/kargakis/gochia/pkg/utils"
 )
 
 const (
 	// AES block size
 	kBlockSizeBits = aes.BlockSize * 8
-
-	// Extra bits of output from the f functions. Instead of being a function from k -> k bits,
-	// it's a function from k -> k + kExtraBits bits. This allows less collisions in matches.
-	// Refer to the paper for mathematical motivations.
-	kExtraBits = 5
-
-	// Convenience variable
-	kExtraBitsPow = 1 << kExtraBits
-
-	// B and C groups which constitute a bucket, or BC group. These groups determine how
-	// elements match with each other. Two elements must be in adjacent buckets to match.
-	kB      = 60
-	kC  int = 509
-	kBC     = kB * kC
 )
-
-// This (times k) is the length of the metadata that must be kept for each entry. For example,
-// for a table 4 entry, we must keep 4k additional bits for each entry, which is used to
-// compute f5.
-var kVectorLens = map[int]int{
-	2: 1,
-	3: 2,
-	4: 4,
-	5: 4,
-	6: 3,
-	7: 2,
-	8: 0,
-}
 
 type F1 struct {
 	k   uint64
@@ -47,8 +21,8 @@ type F1 struct {
 }
 
 func NewF1(k uint64, key []byte) (*F1, error) {
-	if k < kMinPlotSize || k > kMaxPlotSize {
-		return nil, fmt.Errorf("invalid k: %d, valid range: %d - %d", k, kMinPlotSize, kMaxPlotSize)
+	if k < parameters.KMinPlotSize || k > parameters.KMaxPlotSize {
+		return nil, fmt.Errorf("invalid k: %d, valid range: %d - %d", k, parameters.KMinPlotSize, parameters.KMaxPlotSize)
 	}
 
 	f1 := &F1{

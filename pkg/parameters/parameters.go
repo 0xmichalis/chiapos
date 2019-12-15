@@ -5,16 +5,19 @@ const (
 
 	ParamM = 1 << ParamEXT
 
+	// B and C groups which constitute a bucket, or BC group. These groups determine how
+	// elements match with each other. Two elements must be in adjacent buckets to match.
 	ParamB = 60
-
 	ParamC = 509
 
 	ParamBC = ParamB * ParamC
 
-	ParamC1 = 10000
-	ParamC2 = 10000
+	// Must be set high enough to prevent attacks of fast plotting
+	// TODO: Should be set to 33
+	KMinPlotSize = 15
 
-	ParamStubBits = 4
+	// Set at 59 to allow easy use of 64 bit integers
+	KMaxPlotSize = 59
 )
 
 func BucketID(x uint64) uint64 {

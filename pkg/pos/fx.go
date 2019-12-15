@@ -6,6 +6,7 @@ import (
 	"math"
 	"math/big"
 
+	"github.com/kargakis/gochia/pkg/parameters"
 	"github.com/kargakis/gochia/pkg/rraes"
 )
 
@@ -15,8 +16,8 @@ type Fx struct {
 }
 
 func NewFx(k uint64, key []byte) (*Fx, error) {
-	if k < kMinPlotSize || k > kMaxPlotSize {
-		return nil, fmt.Errorf("invalid k: %d, valid range: %d - %d", k, kMinPlotSize, kMaxPlotSize)
+	if k < parameters.KMinPlotSize || k > parameters.KMaxPlotSize {
+		return nil, fmt.Errorf("invalid k: %d, valid range: %d - %d", k, parameters.KMinPlotSize, parameters.KMaxPlotSize)
 	}
 
 	fx := &Fx{
