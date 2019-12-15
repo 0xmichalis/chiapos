@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/afero"
 
 	"github.com/kargakis/gochia/pkg/serialize"
+	"github.com/kargakis/gochia/pkg/utils"
 	"github.com/kargakis/gochia/pkg/utils/sort"
 )
 
@@ -49,7 +50,7 @@ func WritePlotFile(filename string, k, availableMemory uint64, memo, id []byte) 
 		}
 		wrote += n
 	}
-	fmt.Printf("Wrote %d entries (size: %s)\n", maxNumber, prettySize(uint64(wrote)))
+	fmt.Printf("Wrote %d entries (size: %s)\n", maxNumber, utils.PrettySize(uint64(wrote)))
 
 	// if we know beforehand there is not enough space
 	// to sort in memory, we can prepare the spare file
@@ -66,7 +67,7 @@ func WritePlotFile(filename string, k, availableMemory uint64, memo, id []byte) 
 	if err := sort.OnDisk(file, spare, uint64(headerLen), uint64(wrote+headerLen), availableMemory, uint64(wrote)/maxNumber, maxNumber, int(k)); err != nil {
 		return err
 	}
-	fmt.Printf("F1 calculations finished in %v (wrote %s)\n", time.Since(start), prettySize(uint64(wrote)))
+	fmt.Printf("F1 calculations finished in %v (wrote %s)\n", time.Since(start), utils.PrettySize(uint64(wrote)))
 
 	fmt.Println("Computing table 2...")
 	start = time.Now()
@@ -80,26 +81,6 @@ func WritePlotFile(filename string, k, availableMemory uint64, memo, id []byte) 
 	}
 
 	return nil
-}
-
-func prettySize(size uint64) string {
-	switch c := class(size); c {
-	case 0: // bytes
-		return fmt.Sprintf("%d B", size)
-	case 1: // kilobytes
-		return fmt.Sprintf("%d KB", size/1024)
-	case 2: // megabytes
-		return fmt.Sprintf("%d MB", size/(1024*1024))
-	default: // gigabytes
-		return fmt.Sprintf("%d GB", size/(1024*1024*1024))
-	}
-}
-
-func class(size uint64) int {
-	if size < 1024 {
-		return 0
-	}
-	return 1 + class(size/1024)
 }
 
 // WriteHeader writes the plot file header to a file
