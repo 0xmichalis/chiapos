@@ -10,7 +10,7 @@ import (
 
 func TestUint64ToBytes(t *testing.T) {
 	var n uint64 = 1000
-	nBytes := mybits.Uint64ToBytes(n)
+	nBytes := mybits.Uint64ToBytes(n, 15)
 	bigN := new(big.Int).SetBytes(nBytes)
 	if bigN.Uint64() != n {
 		t.Errorf("expected big.Int(n) to be %d, got %d", n, bigN.Uint64())
@@ -26,7 +26,7 @@ func TestBytesToUint64(t *testing.T) {
 		nBytes[i] = bigNBytes[i-(8-len(bigNBytes))]
 	}
 
-	n := mybits.BytesToUint64(nBytes)
+	n := mybits.BytesToUint64(nBytes, 64)
 	if bigN.Uint64() != n {
 		t.Errorf("expected n to be %d, got %d", bigN.Uint64(), n)
 	}
@@ -73,7 +73,7 @@ func TestNormalise(t *testing.T) {
 			expect: uint64(bits.Reverse32(1)),
 		},
 		{
-			x:      uint64(bits.Reverse64(1)),
+			x:      bits.Reverse64(1),
 			k:      32,
 			expect: uint64(bits.Reverse32(1)),
 		},
