@@ -9,25 +9,23 @@ import (
 
 // At is a high-level hash function that calls AES on its inputs.
 // c is meant to be created using the plot seed as a key.
-func At(x, y, k uint64, t int, c cipher.Block) (*uint64, error) {
+func At(x, y *big.Int, k uint64, t int, c cipher.Block) (uint64, error) {
 	param := big.NewInt(1).Rsh(big.NewInt(1), 128)
 
 	// setup x low and high
-	xBig := new(big.Int).SetUint64(x)
 	xLow := new(big.Int)
 	xHigh := new(big.Int)
-	xHigh.DivMod(xBig, param, xLow)
+	xHigh.DivMod(x, param, xLow)
 
 	// setup y low and high
-	yBig := new(big.Int).SetUint64(y)
 	yLow := new(big.Int)
 	yHigh := new(big.Int)
-	yHigh.DivMod(yBig, param, yLow)
+	yHigh.DivMod(y, param, yLow)
 
 	// setup size
 	collaSize, err := CollaSize(t)
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
 	size := 2 * int(k) * *collaSize
 
@@ -35,17 +33,16 @@ func At(x, y, k uint64, t int, c cipher.Block) (*uint64, error) {
 	var cipherText []byte
 	switch {
 	case 0 <= size && size <= 128:
-		plaintext := utils.Concat(k, x, y)
-		c.Encrypt(cipherText, plaintext.Bytes())
+		c.Encrypt(cipherText, utils.ConcatBig(k, x, y).Bytes())
 
 	case 129 <= size && size <= 256:
-		c.Encrypt(cipherText, xBig.Bytes())
+		c.Encrypt(cipherText, x.Bytes())
 		tmp := new(big.Int).SetBytes(cipherText)
-		c.Encrypt(cipherText, tmp.Xor(tmp, yBig).Bytes())
+		c.Encrypt(cipherText, tmp.Xor(tmp, y).Bytes())
 
 	case 257 <= size && size <= 384:
 		var cipherConcat []byte
-		c.Encrypt(cipherConcat, utils.Concat(k, xLow.Uint64(), yLow.Uint64()).Bytes())
+		c.Encrypt(cipherConcat, utils.ConcatBig(k, xLow, yLow).Bytes())
 		ccBig := new(big.Int).SetBytes(cipherConcat)
 
 		var cipherYHigh []byte
@@ -76,5 +73,5 @@ func At(x, y, k uint64, t int, c cipher.Block) (*uint64, error) {
 	// need to return the most significant k+paramEXT bits
 	res := new(big.Int).SetBytes(cipherText)
 	r := utils.Trunc(res, 0, k+5, k).Uint64()
-	return &r, nil
+	return r, nil
 }

@@ -10,8 +10,6 @@ import (
 )
 
 // Concat performs zero-padded concatenation of the provided xs.
-// Every member of xs is normalised to a [2^k] number.
-// TODO: Maybe move normalisation out of here.
 func Concat(k uint64, xs ...uint64) *big.Int {
 	switch len(xs) {
 	case 0:
@@ -23,6 +21,21 @@ func Concat(k uint64, xs ...uint64) *big.Int {
 	for _, x := range xs {
 		bigX := new(big.Int).SetUint64(x)
 		res.Lsh(res, uint(k)).Add(res, bigX)
+	}
+	return res
+}
+
+// ConcatBig performs zero-padded concatenation of the provided xs.
+func ConcatBig(k uint64, xs ...*big.Int) *big.Int {
+	switch len(xs) {
+	case 0:
+		return big.NewInt(0)
+	case 1:
+		return xs[0]
+	}
+	res := big.NewInt(0)
+	for _, x := range xs {
+		res.Lsh(res, uint(x.BitLen())).Add(res, x)
 	}
 	return res
 }

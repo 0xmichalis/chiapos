@@ -160,13 +160,13 @@ func WritePlotFile(filename string, k, availableMemory uint64, memo, id []byte) 
 
 	fmt.Println("Computing table 2...")
 	start = time.Now()
-	f2, err := NewF2(k, id)
+	fx, err := NewFx(k, id)
 	if err != nil {
 		return err
 	}
 
 	for x := uint64(0); x < maxNumber; x++ {
-		_ = f2
+		_ = fx
 	}
 
 	return nil
