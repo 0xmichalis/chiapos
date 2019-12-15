@@ -20,13 +20,13 @@ type F1 struct {
 	key cipher.Block
 }
 
-func NewF1(k uint64, key []byte) (*F1, error) {
+func NewF1(k int, key []byte) (*F1, error) {
 	if k < parameters.KMinPlotSize || k > parameters.KMaxPlotSize {
 		return nil, fmt.Errorf("invalid k: %d, valid range: %d - %d", k, parameters.KMinPlotSize, parameters.KMaxPlotSize)
 	}
 
 	f1 := &F1{
-		k: k,
+		k: uint64(k),
 	}
 
 	aesKey := make([]byte, 32)

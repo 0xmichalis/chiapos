@@ -22,7 +22,7 @@ func bucketIndex(entry uint64, b, k int) string {
 // OnDisk performs sorting on the given file on disk, given begin which
 // is the start of the data in the file in need of sorting, and availableMemory
 // is the available memory in which sorting can be done.
-func OnDisk(file, spare afero.File, begin, maxSize, availableMemory, entryLen, entryCount uint64, k int) error {
+func OnDisk(file, spare afero.File, begin, maxSize, availableMemory, entryLen, entryCount, k int) error {
 	// TODO: FIXME - note that we need to take into account the
 	// memory that will be used by loading the unsorted buckets,
 	// the sorted buckets that are currently in memory, plus any
@@ -34,12 +34,12 @@ func OnDisk(file, spare afero.File, begin, maxSize, availableMemory, entryLen, e
 
 	// The index in these buckets represents the common prefix
 	// based on which we sort numbers (4 most-significant bits)
-	bucketSizes := make([]uint64, 16)
-	bucketBegins := make([]uint64, 16)
+	bucketSizes := make([]int, 16)
+	bucketBegins := make([]int, 16)
 
-	filePositions := make([]uint64, 16)
+	filePositions := make([]int, 16)
 
-	var total uint64
+	var total int
 	for i := 0; i < 16; i++ {
 		bucketBegins[i] = total
 		total += bucketSizes[i]
@@ -54,8 +54,8 @@ type entry struct {
 	x  uint64
 }
 
-func loadEntries(file afero.File, begin, entryLen, entryCount uint64, k int) (entries []entry, err error) {
-	for i := uint64(0); i < entryCount; i++ {
+func loadEntries(file afero.File, begin, entryLen, entryCount, k int) (entries []entry, err error) {
+	for i := 0; i < entryCount; i++ {
 		fx, x, err := serialize.Read(file, int64(begin+(i*entryLen)), int(entryLen), k)
 		if err != nil {
 			return nil, err
@@ -67,7 +67,7 @@ func loadEntries(file afero.File, begin, entryLen, entryCount uint64, k int) (en
 }
 
 // InMemory sorts the provided entries in memory.
-func InMemory(file afero.File, begin, entryLen, entryCount uint64, k int) error {
+func InMemory(file afero.File, begin, entryLen, entryCount int, k int) error {
 	entries, err := loadEntries(file, begin, entryLen, entryCount, k)
 	if err != nil {
 		return fmt.Errorf("cannot load entries in memory: %v", err)

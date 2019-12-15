@@ -20,7 +20,7 @@ var AppFs = afero.NewOsFs()
 // proofs of space in it. First, F1 is computed, which is special since it uses
 // AES256, and each encryption provides multiple output values. Then, the rest of the
 // f functions are computed, and a sort on disk happens for each table.
-func WritePlotFile(filename string, k, availableMemory uint64, memo, id []byte) error {
+func WritePlotFile(filename string, k, availableMemory int, memo, id []byte) error {
 	file, err := AppFs.Create(filename)
 	if err != nil {
 		return err
@@ -33,9 +33,46 @@ func WritePlotFile(filename string, k, availableMemory uint64, memo, id []byte) 
 
 	fmt.Println("Computing table 1...")
 	start := time.Now()
-	f1, err := NewF1(k, id)
+	wrote, err := WriteFirstTable(file, k, headerLen, id)
 	if err != nil {
 		return err
+	}
+
+	// if we know beforehand there is not enough space
+	// to sort in memory, we can prepare the spare file
+	var spare afero.File
+	if wrote > availableMemory {
+		spare, err = AppFs.Create(filename + "-spare")
+		if err != nil {
+			return err
+		}
+	}
+
+	fmt.Println("Sorting table 1...")
+	maxNumber := int(math.Pow(2, float64(k)))
+	if err := sort.OnDisk(file, spare, headerLen, wrote+headerLen, availableMemory, wrote/maxNumber, maxNumber, k); err != nil {
+		return err
+	}
+	fmt.Printf("F1 calculations finished in %v (wrote %s)\n", time.Since(start), utils.PrettySize(uint64(wrote)))
+
+	fmt.Println("Computing table 2...")
+	start = time.Now()
+	fx, err := NewFx(uint64(k), id)
+	if err != nil {
+		return err
+	}
+
+	for x := 0; x < maxNumber; x++ {
+		_ = fx
+	}
+
+	return nil
+}
+
+func WriteFirstTable(file afero.File, k, start int, id []byte) (int, error) {
+	f1, err := NewF1(k, id)
+	if err != nil {
+		return 0, err
 	}
 
 	var wrote int
@@ -44,43 +81,14 @@ func WritePlotFile(filename string, k, availableMemory uint64, memo, id []byte) 
 	// TODO: Try to parallelize and see how it fares CPU-wise
 	for x := uint64(0); x < maxNumber; x++ {
 		f1x := f1.Calculate(x)
-		n, err := serialize.Write(file, int64(headerLen+wrote), x, f1x, int(k))
+		n, err := serialize.Write(file, int64(start+wrote), x, f1x, int(k))
 		if err != nil {
-			return err
+			return wrote + n, err
 		}
 		wrote += n
 	}
 	fmt.Printf("Wrote %d entries (size: %s)\n", maxNumber, utils.PrettySize(uint64(wrote)))
-
-	// if we know beforehand there is not enough space
-	// to sort in memory, we can prepare the spare file
-	var spare afero.File
-	if uint64(wrote) > availableMemory {
-		spare, err = AppFs.Create(filename + "-spare")
-		if err != nil {
-			return err
-		}
-	}
-
-	fmt.Println("Sorting table 1...")
-
-	if err := sort.OnDisk(file, spare, uint64(headerLen), uint64(wrote+headerLen), availableMemory, uint64(wrote)/maxNumber, maxNumber, int(k)); err != nil {
-		return err
-	}
-	fmt.Printf("F1 calculations finished in %v (wrote %s)\n", time.Since(start), utils.PrettySize(uint64(wrote)))
-
-	fmt.Println("Computing table 2...")
-	start = time.Now()
-	fx, err := NewFx(k, id)
-	if err != nil {
-		return err
-	}
-
-	for x := uint64(0); x < maxNumber; x++ {
-		_ = fx
-	}
-
-	return nil
+	return wrote, nil
 }
 
 // WriteHeader writes the plot file header to a file
@@ -89,7 +97,7 @@ func WritePlotFile(filename string, k, availableMemory uint64, memo, id []byte) 
 // 1 byte    - k
 // 2 bytes   - memo length
 // x bytes   - memo
-func WriteHeader(file afero.File, k uint64, memo, id []byte) (int, error) {
+func WriteHeader(file afero.File, k int, memo, id []byte) (int, error) {
 	n, err := file.Write([]byte("Proof of Space Plot"))
 	if err != nil {
 		return n, err
