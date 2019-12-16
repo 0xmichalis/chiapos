@@ -16,7 +16,7 @@ var (
 	k        = flag.Int("k", 15, "Storage parameter")
 	plotPath = flag.String("f", "plot.dat", "Final path to the plot")
 	keyPath  = flag.String("key", "", "Path to key to be used as a plot seed")
-	availMem = flag.Int("m", 20*1024*1024, "Max memory to use when plotting. Defaults to all OS available memory when set to zero.")
+	availMem = flag.Int("m", 5*1024*1024*1024, "Max memory to use when plotting. Defaults to all OS available memory when set to zero.")
 )
 
 func main() {
@@ -43,7 +43,7 @@ func main() {
 			fmt.Printf("cannot read system info to get available memory: %v", err)
 			os.Exit(1)
 		}
-		*availMem = si.Freeram
+		*availMem = int(si.Freeram)
 	}
 	fmt.Printf("Available memory: %dMB\n", *availMem/(1024*1024))
 

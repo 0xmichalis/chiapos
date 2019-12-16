@@ -89,7 +89,7 @@ func bToMb(b uint64) uint64 {
 }
 
 // PrettySize returns a human-readable representation of disk size.
-func PrettySize(size uint64) string {
+func PrettySize(size int) string {
 	switch c := class(size); c {
 	case 0: // bytes
 		return fmt.Sprintf("%d B", size)
@@ -102,7 +102,7 @@ func PrettySize(size uint64) string {
 	}
 }
 
-func class(size uint64) int {
+func class(size int) int {
 	if size < 1024 {
 		return 0
 	}

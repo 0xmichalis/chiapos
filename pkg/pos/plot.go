@@ -2,11 +2,13 @@ package pos
 
 import (
 	"fmt"
+	"io"
 	"math"
 	"time"
 
 	"github.com/spf13/afero"
 
+	"github.com/kargakis/gochia/pkg/parameters"
 	"github.com/kargakis/gochia/pkg/serialize"
 	"github.com/kargakis/gochia/pkg/utils"
 	"github.com/kargakis/gochia/pkg/utils/sort"
@@ -50,10 +52,11 @@ func WritePlotFile(filename string, k, availableMemory int, memo, id []byte) err
 
 	fmt.Println("Sorting table 1...")
 	maxNumber := int(math.Pow(2, float64(k)))
-	if err := sort.OnDisk(file, spare, headerLen, wrote+headerLen, availableMemory, wrote/maxNumber, maxNumber, k); err != nil {
+	entryLen := wrote / maxNumber
+	if err := sort.OnDisk(file, spare, headerLen, wrote+headerLen, availableMemory, entryLen, maxNumber, k); err != nil {
 		return err
 	}
-	fmt.Printf("F1 calculations finished in %v (wrote %s)\n", time.Since(start), utils.PrettySize(uint64(wrote)))
+	fmt.Printf("F1 calculations finished in %v (wrote %s)\n", time.Since(start), utils.PrettySize(wrote))
 
 	fmt.Println("Computing table 2...")
 	start = time.Now()
@@ -62,8 +65,17 @@ func WritePlotFile(filename string, k, availableMemory int, memo, id []byte) err
 		return err
 	}
 
-	for x := 0; x < maxNumber; x++ {
-		_ = fx
+	previousStart := headerLen
+	currentStart := headerLen + wrote
+	for t := 2; t <= 7; t++ {
+		wrote, err := WriteTable(file, k, t, currentStart, entryLen, fx)
+		if err != nil {
+			return err
+		}
+		previousStart += wrote
+		currentStart += wrote
+		entryLen = wrote / maxNumber
+		break // TODO: REMOVE
 	}
 
 	return nil
@@ -78,17 +90,73 @@ func WriteFirstTable(file afero.File, k, start int, id []byte) (int, error) {
 	var wrote int
 	maxNumber := uint64(math.Pow(2, float64(k)))
 
-	// TODO: Try to parallelize and see how it fares CPU-wise
+	// TODO: Batch writes
 	for x := uint64(0); x < maxNumber; x++ {
 		f1x := f1.Calculate(x)
-		n, err := serialize.Write(file, int64(start+wrote), x, f1x, int(k))
+		n, err := serialize.Write(file, int64(start+wrote), x, f1x, k)
 		if err != nil {
 			return wrote + n, err
 		}
 		wrote += n
 	}
-	fmt.Printf("Wrote %d entries (size: %s)\n", maxNumber, utils.PrettySize(uint64(wrote)))
+	if _, err := file.Write([]byte(serialize.EOT)); err != nil {
+		return wrote, err
+	}
+	fmt.Printf("Wrote %d entries (size: %s)\n", maxNumber, utils.PrettySize(wrote))
 	return wrote, nil
+}
+
+type bucket struct {
+	fx *uint64
+	xs []uint64
+	// bytes read to get this bucket into memory
+	read int
+}
+
+// WriteTable reads the t-1'th table from the file and writes the t'th table.
+func WriteTable(file afero.File, k, t, start, entryLen int, fx *Fx) (int, error) {
+	var (
+		read    int
+		written int
+
+		bucketID     uint64
+		leftBucketID uint64
+		leftBucket   []*serialize.Entry
+		rightBucket  []*serialize.Entry
+	)
+
+	for {
+		// Read left entry
+		leftEntry, r, err := serialize.Read(file, int64(start+read), entryLen, k)
+		if err == serialize.EOTErr || err == io.EOF {
+			break
+		}
+		if err != nil {
+			return written, fmt.Errorf("cannot read left entry: %v", err)
+		}
+		read += r
+
+		leftBucketID = parameters.BucketID(leftEntry.Fx)
+
+		switch {
+		case leftBucketID == bucketID:
+			// Add entries in the left bucket
+			leftBucket = append(leftBucket, leftEntry)
+
+		case leftBucketID == bucketID+1:
+			// Add entries in the right bucket
+			rightBucket = append(rightBucket, leftEntry)
+
+		default:
+			if len(leftBucket) > 0 && len(rightBucket) > 0 {
+				// We have finished adding to both buckets, now we need to compare them.
+			}
+		}
+
+		//fmt.Printf("Checking %d and %d for a potential match\n", fl, fr)
+	}
+
+	return written, nil
 }
 
 // WriteHeader writes the plot file header to a file

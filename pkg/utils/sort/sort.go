@@ -11,7 +11,7 @@ import (
 	mybits "github.com/kargakis/gochia/pkg/utils/bits"
 )
 
-var buckets = make(map[string][]entry)
+var buckets = make(map[string][]*serialize.Entry)
 
 // bucketIndex returns the index of the target bucket for this
 // entry. b is the smallest number such that 2^b >= 2 * num_entries.
@@ -49,18 +49,13 @@ func OnDisk(file, spare afero.File, begin, maxSize, availableMemory, entryLen, e
 	return nil
 }
 
-type entry struct {
-	fx uint64
-	x  uint64
-}
-
-func loadEntries(file afero.File, begin, entryLen, entryCount, k int) (entries []entry, err error) {
+func loadEntries(file afero.File, begin, entryLen, entryCount, k int) (entries []*serialize.Entry, err error) {
 	for i := 0; i < entryCount; i++ {
-		fx, x, err := serialize.Read(file, int64(begin+(i*entryLen)), int(entryLen), k)
+		entry, _, err := serialize.Read(file, int64(begin+(i*entryLen)), entryLen, k)
 		if err != nil {
 			return nil, err
 		}
-		entries = append(entries, entry{fx: fx, x: x})
+		entries = append(entries, entry)
 	}
 
 	return entries, nil
@@ -76,21 +71,21 @@ func InMemory(file afero.File, begin, entryLen, entryCount int, k int) error {
 	var bucketIndexes []string
 	b := bits.Len64(uint64(2*len(entries))) / 8
 	for _, e := range entries {
-		bIndex := bucketIndex(e.fx, b, k)
+		bIndex := bucketIndex(e.Fx, b, k)
 		bEntries, ok := buckets[bIndex]
 		if !ok {
-			buckets[bIndex] = []entry{e}
+			buckets[bIndex] = []*serialize.Entry{e}
 			bucketIndexes = append(bucketIndexes, bIndex)
 		} else {
 			index := -1
 			for i, stored := range bEntries {
-				if e.fx < stored.fx {
+				if e.Fx < stored.Fx {
 					index = i
 					break
 				}
 			}
 			if index != -1 {
-				buckets[bIndex] = append(append(bEntries[:index], e), bEntries[index:]...)
+				buckets[bIndex] = append(append(bEntries[:index], e), bEntries[index+1:]...)
 			} else {
 				buckets[bIndex] = append(buckets[bIndex], e)
 			}
@@ -101,7 +96,7 @@ func InMemory(file afero.File, begin, entryLen, entryCount int, k int) error {
 	var wrote int
 	for _, index := range bucketIndexes {
 		for _, e := range buckets[index] {
-			n, err := serialize.Write(file, int64(int(begin)+wrote), e.x, e.fx, k)
+			n, err := serialize.Write(file, int64(begin+wrote), e.X, e.Fx, k)
 			if err != nil {
 				return fmt.Errorf("cannot write sorted values: %v", err)
 			}

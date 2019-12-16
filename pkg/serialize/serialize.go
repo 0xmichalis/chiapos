@@ -3,6 +3,7 @@ package serialize
 import (
 	"bytes"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
 
@@ -10,6 +11,15 @@ import (
 
 	mybits "github.com/kargakis/gochia/pkg/utils/bits"
 )
+
+type Entry struct {
+	Fx uint64
+	X  uint64
+}
+
+const EOT = "\\0"
+
+var EOTErr = errors.New("EOT")
 
 func Write(file afero.File, offset int64, x, fx uint64, k int) (int, error) {
 	if _, err := file.Seek(offset, io.SeekStart); err != nil {
@@ -31,16 +41,21 @@ func Write(file afero.File, offset int64, x, fx uint64, k int) (int, error) {
 	return file.Write(dst)
 }
 
-func Read(file afero.File, offset int64, entryLen, k int) (fx uint64, x uint64, err error) {
+func Read(file afero.File, offset int64, entryLen, k int) (*Entry, int, error) {
 	e := make([]byte, entryLen)
 
-	if _, err := file.ReadAt(e, offset); err != nil {
-		return 0, 0, err
+	read, err := file.ReadAt(e, offset)
+	if err != nil {
+		return nil, read, err
+	}
+
+	if bytes.Contains(e, []byte(EOT)) {
+		return nil, read, EOTErr
 	}
 
 	parts := bytes.Split(e, []byte(","))
 	if len(parts) != 2 {
-		return 0, 0, fmt.Errorf("invalid line read: %v", parts)
+		return nil, read, fmt.Errorf("invalid line read: %v", parts)
 	}
 	// drop delimeter
 	parts[1] = bytes.TrimSpace(parts[1])
@@ -48,16 +63,16 @@ func Read(file afero.File, offset int64, entryLen, k int) (fx uint64, x uint64, 
 	dst := make([]byte, hex.DecodedLen(len(parts[0])))
 	_, err = hex.Decode(dst, parts[0])
 	if err != nil {
-		return 0, 0, fmt.Errorf("cannot decode f(x): %v", err)
+		return nil, read, fmt.Errorf("cannot decode f(x): %v", err)
 	}
-	fx = mybits.BytesToUint64(dst, k)
+	fx := mybits.BytesToUint64(dst, k)
 
 	dst = make([]byte, hex.DecodedLen(len(parts[1])))
 	_, err = hex.Decode(dst, parts[1])
 	if err != nil {
-		return 0, 0, fmt.Errorf("cannot decode x: %v", err)
+		return nil, read, fmt.Errorf("cannot decode x: %v", err)
 	}
-	x = mybits.BytesToUint64(dst, k)
+	x := mybits.BytesToUint64(dst, k)
 
-	return
+	return &Entry{Fx: fx, X: x}, read, nil
 }
