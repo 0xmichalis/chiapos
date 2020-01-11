@@ -68,7 +68,7 @@ func WritePlotFile(filename string, k, availableMemory int, memo, id []byte) err
 	previousStart := headerLen
 	currentStart := headerLen + wrote
 	for t := 2; t <= 7; t++ {
-		wrote, err := WriteTable(file, k, t, currentStart, entryLen, fx)
+		wrote, err := WriteTable(file, k, t, previousStart, currentStart, entryLen, fx)
 		if err != nil {
 			return err
 		}
@@ -114,7 +114,7 @@ type bucket struct {
 }
 
 // WriteTable reads the t-1'th table from the file and writes the t'th table.
-func WriteTable(file afero.File, k, t, start, entryLen int, fx *Fx) (int, error) {
+func WriteTable(file afero.File, k, t, previousStart, currentStart, entryLen int, fx *Fx) (int, error) {
 	var (
 		read    int
 		written int
@@ -125,19 +125,19 @@ func WriteTable(file afero.File, k, t, start, entryLen int, fx *Fx) (int, error)
 		rightBucket  []*serialize.Entry
 	)
 
+	matches := make(map[uint64]uint64)
 	for {
-		// Read left entry
-		leftEntry, r, err := serialize.Read(file, int64(start+read), entryLen, k)
+		// Read an entry
+		leftEntry, bytesRead, err := serialize.Read(file, int64(previousStart+read), entryLen, k)
 		if err == serialize.EOTErr || err == io.EOF {
 			break
 		}
 		if err != nil {
 			return written, fmt.Errorf("cannot read left entry: %v", err)
 		}
-		read += r
+		read += bytesRead
 
 		leftBucketID = parameters.BucketID(leftEntry.Fx)
-
 		switch {
 		case leftBucketID == bucketID:
 			// Add entries in the left bucket
@@ -150,10 +150,30 @@ func WriteTable(file afero.File, k, t, start, entryLen int, fx *Fx) (int, error)
 		default:
 			if len(leftBucket) > 0 && len(rightBucket) > 0 {
 				// We have finished adding to both buckets, now we need to compare them.
+				for l, r := range FindMatches(leftBucket, rightBucket) {
+					matches[l] = r
+				}
+			}
+			if leftBucketID == bucketID+2 {
+				// Keep the right bucket as the new left bucket
+				bucketID++
+				leftBucket = rightBucket
+				rightBucket = nil
+			} else {
+				// This bucket id is greater than bucketID+2 so we need to
+				// start over building both buckets.
+				bucketID = leftBucketID
+				leftBucket = nil
+				rightBucket = nil
 			}
 		}
+	}
 
-		//fmt.Printf("Checking %d and %d for a potential match\n", fl, fr)
+	// TODO: Remove
+	if len(matches) == 0 {
+		fmt.Println("Found no matches :(")
+	} else {
+		fmt.Printf("Found %d matches\n", len(matches))
 	}
 
 	return written, nil
