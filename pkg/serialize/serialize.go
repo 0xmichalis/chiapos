@@ -15,6 +15,9 @@ import (
 type Entry struct {
 	Fx uint64
 	X  uint64
+
+	// Index of the f output inside the table
+	Index int
 }
 
 const EOT = "\\0"

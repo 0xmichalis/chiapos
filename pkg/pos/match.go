@@ -7,14 +7,34 @@ import (
 	"github.com/kargakis/gochia/pkg/serialize"
 )
 
+type Match struct {
+	Left  uint64
+	Right uint64
+
+	LeftPosition int
+	// Offset is used to estimate the position of the right match
+	// in the table, which is LeftPosition + Offset.
+	Offset int
+
+	LeftMetadata  uint64
+	RightMetadata uint64
+}
+
 // FindMatches compares the two buckets and returns any matches.
-func FindMatches(left, right []*serialize.Entry) map[uint64]uint64 {
-	matches := make(map[uint64]uint64)
+func FindMatches(left, right []*serialize.Entry) []Match {
+	var matches []Match
 
 	for _, le := range left {
 		for _, re := range right {
-			if Match(le.Fx, re.Fx) {
-				matches[le.Fx] = re.Fx
+			if matchEntries(le.Fx, re.Fx) {
+				matches = append(matches, Match{
+					Left:          le.Fx,
+					Right:         re.Fx,
+					LeftPosition:  le.Index,
+					Offset:        re.Index - le.Index,
+					LeftMetadata:  le.X,
+					RightMetadata: re.X,
+				})
 			}
 		}
 	}
@@ -22,8 +42,8 @@ func FindMatches(left, right []*serialize.Entry) map[uint64]uint64 {
 	return matches
 }
 
-// Match is a matching function.
-func Match(left, right uint64) bool {
+// matchEntries is a matching function.
+func matchEntries(left, right uint64) bool {
 	if parameters.BucketID(left)+1 != parameters.BucketID(right) {
 		return false
 	}

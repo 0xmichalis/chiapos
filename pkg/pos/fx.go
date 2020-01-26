@@ -36,10 +36,10 @@ func NewFx(k uint64, key []byte) (*Fx, error) {
 	return fx, nil
 }
 
-func (f *Fx) Calculate(t int, fx uint64, xs ...uint64) uint64 {
+func (f *Fx) Calculate(t int, fx uint64, xs ...uint64) (uint64, error) {
 	xLen := int(math.Pow(2, float64(t-1)))
 	if len(xs) != xLen {
-		panic(fmt.Sprintf("expected %d xs, got %d", xLen, len(xs)))
+		return 0, fmt.Errorf("expected %d xs, got %d", xLen, len(xs))
 	}
 
 	var cl, cr *big.Int
@@ -54,18 +54,18 @@ func (f *Fx) Calculate(t int, fx uint64, xs ...uint64) uint64 {
 
 		cl, err = Ct(t, f.k, xs[0:mid]...)
 		if err != nil {
-			panic(err)
+			return 0, fmt.Errorf("cannot collate first half: %v", err)
 		}
 		cr, err = Ct(t, f.k, xs[mid:len(xs)-1]...)
 		if err != nil {
-			panic(err)
+			return 0, fmt.Errorf("cannot collate second half: %v", err)
 		}
 	}
 
 	at, err := At(cl, cr, f.k, t, f.key)
 	if err != nil {
-		panic(err)
+		return 0, fmt.Errorf("cannot generate output via AES encryption: %v", err)
 	}
 
-	return at ^ fx
+	return at ^ fx, nil
 }

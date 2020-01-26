@@ -106,13 +106,6 @@ func WriteFirstTable(file afero.File, k, start int, id []byte) (int, error) {
 	return wrote, nil
 }
 
-type bucket struct {
-	fx *uint64
-	xs []uint64
-	// bytes read to get this bucket into memory
-	read int
-}
-
 // WriteTable reads the t-1'th table from the file and writes the t'th table.
 func WriteTable(file afero.File, k, t, previousStart, currentStart, entryLen int, fx *Fx) (int, error) {
 	var (
@@ -125,7 +118,8 @@ func WriteTable(file afero.File, k, t, previousStart, currentStart, entryLen int
 		rightBucket  []*serialize.Entry
 	)
 
-	matches := make(map[uint64]uint64)
+	var index int
+
 	for {
 		// Read an entry
 		leftEntry, bytesRead, err := serialize.Read(file, int64(previousStart+read), entryLen, k)
@@ -136,6 +130,7 @@ func WriteTable(file afero.File, k, t, previousStart, currentStart, entryLen int
 			return written, fmt.Errorf("cannot read left entry: %v", err)
 		}
 		read += bytesRead
+		leftEntry.Index = index
 
 		leftBucketID = parameters.BucketID(leftEntry.Fx)
 		switch {
@@ -150,8 +145,22 @@ func WriteTable(file afero.File, k, t, previousStart, currentStart, entryLen int
 		default:
 			if len(leftBucket) > 0 && len(rightBucket) > 0 {
 				// We have finished adding to both buckets, now we need to compare them.
-				for l, r := range FindMatches(leftBucket, rightBucket) {
-					matches[l] = r
+				// For any matches, we are going to calculate outputs for the next table.
+				for _, m := range FindMatches(leftBucket, rightBucket) {
+					f, err := fx.Calculate(t, m.Left, m.LeftMetadata, m.RightMetadata)
+					if err != nil {
+						return written, err
+					}
+					// TODO: This is the collated output stored next to the entry - useful
+					// for generating outputs for the next table. This means the collation
+					// function needs to be reworked.
+					var x uint64
+					w, err := serialize.Write(file, int64(currentStart+written), f, x, k)
+					if err != nil {
+						return written + w, err
+					}
+					written += w
+					// Now write the new output in the next table.
 				}
 			}
 			if leftBucketID == bucketID+2 {
@@ -167,13 +176,9 @@ func WriteTable(file afero.File, k, t, previousStart, currentStart, entryLen int
 				rightBucket = nil
 			}
 		}
-	}
 
-	// TODO: Remove
-	if len(matches) == 0 {
-		fmt.Println("Found no matches :(")
-	} else {
-		fmt.Printf("Found %d matches\n", len(matches))
+		// advance the table index
+		index++
 	}
 
 	return written, nil
