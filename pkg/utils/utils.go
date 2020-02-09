@@ -35,7 +35,7 @@ func ConcatBig(k uint64, xs ...*big.Int) *big.Int {
 	}
 	res := big.NewInt(0)
 	for _, x := range xs {
-		res.Lsh(res, uint(x.BitLen())).Add(res, x)
+		res.Lsh(res, uint(k)).Add(res, x)
 	}
 	return res
 }

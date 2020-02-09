@@ -96,7 +96,7 @@ func InMemory(file afero.File, begin, entryLen, entryCount int, k int) error {
 	var wrote int
 	for _, index := range bucketIndexes {
 		for _, e := range buckets[index] {
-			n, err := serialize.Write(file, int64(begin+wrote), e.X, e.Fx, k)
+			n, err := serialize.Write(file, int64(begin+wrote), e.Fx, e.X, e.Pos, e.Offset, e.Collated, k)
 			if err != nil {
 				return fmt.Errorf("cannot write sorted values: %v", err)
 			}

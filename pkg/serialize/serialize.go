@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math/big"
 
 	"github.com/spf13/afero"
 
@@ -14,7 +15,16 @@ import (
 
 type Entry struct {
 	Fx uint64
-	X  uint64
+	X  *uint64
+
+	// Position of the left match in the previous table
+	// TODO: This should be k+1 bits.
+	Pos *uint64
+	// Offset to find the right match in the previous table
+	// TODO: This should be a 10-bit offset.
+	Offset *uint64
+	// Collated value to be used as input in the next table.
+	Collated *big.Int
 
 	// Index of the f output inside the table
 	Index int
@@ -24,7 +34,14 @@ const EOT = "\\0"
 
 var EOTErr = errors.New("EOT")
 
-func Write(file afero.File, offset int64, x, fx uint64, k int) (int, error) {
+func writeTo(dst []byte, val uint64, k int) {
+	src := mybits.Uint64ToBytes(val, k)
+	tmp := make([]byte, hex.EncodedLen(len(src)))
+	hex.Encode(tmp, src)
+	dst = append(dst, tmp...)
+}
+
+func Write(file afero.File, offset int64, fx uint64, x, pos, posOffset *uint64, collated *big.Int, k int) (int, error) {
 	if _, err := file.Seek(offset, io.SeekStart); err != nil {
 		return 0, fmt.Errorf("cannot set file offset at %d: %v", offset, err)
 	}
@@ -34,12 +51,31 @@ func Write(file afero.File, offset int64, x, fx uint64, k int) (int, error) {
 	dst := make([]byte, hex.EncodedLen(len(src)))
 	hex.Encode(dst, src)
 
-	src = mybits.Uint64ToBytes(x, k)
-	xDst := make([]byte, hex.EncodedLen(len(src)))
-	hex.Encode(xDst, src)
+	if x != nil {
+		src = mybits.Uint64ToBytes(*x, k)
+		xDst := make([]byte, hex.EncodedLen(len(src)))
+		hex.Encode(xDst, src)
+		dst = append(dst, ',')
+		dst = append(dst, xDst...)
+	}
 
-	dst = append(dst, ',')
-	dst = append(dst, xDst...)
+	// Write the pos,offset if we are provided one
+	if pos != nil {
+		dst = append(dst, ',')
+		writeTo(dst, *pos, k)
+		// posOffset has to be non-nil at this point
+		dst = append(dst, ',')
+		writeTo(dst, *posOffset, k)
+	}
+	// Write the collated value if we are provided one
+	if collated != nil {
+		serialized := collated.Bytes()
+		sDst := make([]byte, hex.EncodedLen(len(serialized)))
+		hex.Encode(sDst, serialized)
+		dst = append(dst, ',')
+		dst = append(dst, sDst...)
+	}
+
 	dst = append(dst, '\n')
 	return file.Write(dst)
 }

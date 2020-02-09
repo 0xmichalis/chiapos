@@ -151,16 +151,18 @@ func WriteTable(file afero.File, k, t, previousStart, currentStart, entryLen int
 					if err != nil {
 						return written, err
 					}
-					// TODO: This is the collated output stored next to the entry - useful
-					// for generating outputs for the next table. This means the collation
-					// function needs to be reworked.
-					var x uint64
-					w, err := serialize.Write(file, int64(currentStart+written), f, x, k)
+					// This is the collated output stored next to the entry - useful
+					// for generating outputs for the next table.
+					collated, err := Collate(t, uint64(k), m.LeftMetadata, m.RightMetadata)
+					if err != nil {
+						return written, err
+					}
+					// Now write the new output in the next table.
+					w, err := serialize.Write(file, int64(currentStart+written), f, nil, nil, nil, collated, k)
 					if err != nil {
 						return written + w, err
 					}
 					written += w
-					// Now write the new output in the next table.
 				}
 			}
 			if leftBucketID == bucketID+2 {

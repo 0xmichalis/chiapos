@@ -27,7 +27,33 @@ func CollaSize(t int) (size *int, err error) {
 	return
 }
 
-// Ct is a collation function for t.
+// Collate collates left and right inputs into outputs for the next table.
+func Collate(t int, k uint64, l, r *big.Int) (*big.Int, error) {
+	switch t {
+	case 2, 3:
+		return utils.ConcatBig(k, l, r), nil
+
+	case 4:
+		return l.Xor(l, r), nil
+
+	case 5:
+		if l.BitLen()%4 != 0 {
+			return nil, fmt.Errorf("invalid bit length for output: expected bit_len%%4==0")
+		}
+		l.Xor(l, r)
+		return utils.Trunc(l, 0, uint64(l.BitLen()*3/4), k), nil
+
+	case 6:
+		if l.BitLen()%3 != 0 {
+			return nil, fmt.Errorf("invalid bit length for output: expected bit_len%%3==0")
+		}
+		l.Xor(l, r)
+		return utils.Trunc(l, 0, uint64(l.BitLen()*2/3), k), nil
+	}
+	return nil, nil
+}
+
+// Ct is a collation function for table t.
 func Ct(t int, k uint64, x ...uint64) (*big.Int, error) {
 	if t < 2 || t > 7 {
 		return nil, fmt.Errorf("collation function for t=%d is undefined", t)

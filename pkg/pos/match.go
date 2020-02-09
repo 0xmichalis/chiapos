@@ -2,6 +2,7 @@ package pos
 
 import (
 	"math"
+	"math/big"
 
 	"github.com/kargakis/gochia/pkg/parameters"
 	"github.com/kargakis/gochia/pkg/serialize"
@@ -16,8 +17,8 @@ type Match struct {
 	// in the table, which is LeftPosition + Offset.
 	Offset int
 
-	LeftMetadata  uint64
-	RightMetadata uint64
+	LeftMetadata  *big.Int
+	RightMetadata *big.Int
 }
 
 // FindMatches compares the two buckets and returns any matches.
@@ -32,8 +33,8 @@ func FindMatches(left, right []*serialize.Entry) []Match {
 					Right:         re.Fx,
 					LeftPosition:  le.Index,
 					Offset:        re.Index - le.Index,
-					LeftMetadata:  le.X,
-					RightMetadata: re.X,
+					LeftMetadata:  big.NewInt(int64(le.X)),
+					RightMetadata: big.NewInt(int64(re.X)),
 				})
 			}
 		}

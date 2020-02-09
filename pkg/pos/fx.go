@@ -3,7 +3,6 @@ package pos
 import (
 	"crypto/cipher"
 	"fmt"
-	"math"
 	"math/big"
 
 	"github.com/kargakis/gochia/pkg/parameters"
@@ -36,32 +35,7 @@ func NewFx(k uint64, key []byte) (*Fx, error) {
 	return fx, nil
 }
 
-func (f *Fx) Calculate(t int, fx uint64, xs ...uint64) (uint64, error) {
-	xLen := int(math.Pow(2, float64(t-1)))
-	if len(xs) != xLen {
-		return 0, fmt.Errorf("expected %d xs, got %d", xLen, len(xs))
-	}
-
-	var cl, cr *big.Int
-
-	switch t {
-	case 2:
-		cl, cr = big.NewInt(int64(xs[0])), big.NewInt(int64(xs[1]))
-
-	default:
-		var err error
-		mid := xLen / 2
-
-		cl, err = Ct(t, f.k, xs[0:mid]...)
-		if err != nil {
-			return 0, fmt.Errorf("cannot collate first half: %v", err)
-		}
-		cr, err = Ct(t, f.k, xs[mid:len(xs)-1]...)
-		if err != nil {
-			return 0, fmt.Errorf("cannot collate second half: %v", err)
-		}
-	}
-
+func (f *Fx) Calculate(t int, fx uint64, cl, cr *big.Int) (uint64, error) {
 	at, err := At(cl, cr, f.k, t, f.key)
 	if err != nil {
 		return 0, fmt.Errorf("cannot generate output via AES encryption: %v", err)
