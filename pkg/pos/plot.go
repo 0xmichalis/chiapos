@@ -93,7 +93,7 @@ func WriteFirstTable(file afero.File, k, start int, id []byte) (int, error) {
 	// TODO: Batch writes
 	for x := uint64(0); x < maxNumber; x++ {
 		f1x := f1.Calculate(x)
-		n, err := serialize.Write(file, int64(start+wrote), x, f1x, k)
+		n, err := serialize.Write(file, int64(start+wrote), f1x, &x, nil, nil, nil, k)
 		if err != nil {
 			return wrote + n, err
 		}
@@ -158,7 +158,7 @@ func WriteTable(file afero.File, k, t, previousStart, currentStart, entryLen int
 						return written, err
 					}
 					// Now write the new output in the next table.
-					w, err := serialize.Write(file, int64(currentStart+written), f, nil, nil, nil, collated, k)
+					w, err := serialize.Write(file, int64(currentStart+written), f, nil, &m.LeftPosition, &m.Offset, collated, k)
 					if err != nil {
 						return written + w, err
 					}

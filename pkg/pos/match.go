@@ -12,10 +12,10 @@ type Match struct {
 	Left  uint64
 	Right uint64
 
-	LeftPosition int
+	LeftPosition uint64
 	// Offset is used to estimate the position of the right match
 	// in the table, which is LeftPosition + Offset.
-	Offset int
+	Offset uint64
 
 	LeftMetadata  *big.Int
 	RightMetadata *big.Int
@@ -28,13 +28,24 @@ func FindMatches(left, right []*serialize.Entry) []Match {
 	for _, le := range left {
 		for _, re := range right {
 			if matchEntries(le.Fx, re.Fx) {
+				var leftMetadata, rightMetadata *big.Int
+				if le.X != nil {
+					leftMetadata = big.NewInt(int64(*le.X))
+				} else if le.Collated != nil {
+					leftMetadata = le.Collated
+				}
+				if re.X != nil {
+					rightMetadata = big.NewInt(int64(*re.X))
+				} else if re.Collated != nil {
+					rightMetadata = re.Collated
+				}
 				matches = append(matches, Match{
 					Left:          le.Fx,
 					Right:         re.Fx,
-					LeftPosition:  le.Index,
-					Offset:        re.Index - le.Index,
-					LeftMetadata:  big.NewInt(int64(le.X)),
-					RightMetadata: big.NewInt(int64(re.X)),
+					LeftPosition:  uint64(le.Index),
+					Offset:        uint64(re.Index - le.Index),
+					LeftMetadata:  leftMetadata,
+					RightMetadata: rightMetadata,
 				})
 			}
 		}
