@@ -62,7 +62,7 @@ func Write(file afero.File, offset int64, fx uint64, x, pos, posOffset *uint64, 
 	// Write the pos,offset if we are provided one
 	if pos != nil {
 		dst = append(dst, ',')
-		dst = writeTo(dst, *pos, k+1)
+		dst = writeTo(dst, *pos, k)
 		// posOffset has to be non-nil at this point
 		dst = append(dst, ',')
 		dst = writeTo(dst, *posOffset, 10)
