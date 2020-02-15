@@ -71,6 +71,7 @@ func InMemory(file afero.File, begin, entryLen, entryCount int, k int) error {
 	}
 
 	var bucketIndexes []string
+	// TODO: Handle case where entries is small
 	b := bits.Len64(uint64(2*len(entries))) / 8
 	for _, e := range entries {
 		bIndex := bucketIndex(e.Fx, b, k)
