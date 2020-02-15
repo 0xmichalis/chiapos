@@ -106,7 +106,7 @@ func WriteFirstTable(file afero.File, k, start int, id []byte) (int, error) {
 		}
 		wrote += n
 	}
-	// TODO: int64 to int conversions are not safe in 32-bit platforms
+
 	eotBytes, err := WriteEOT(file, wrote/int(maxNumber))
 	if err != nil {
 		return wrote + eotBytes, err
@@ -209,6 +209,10 @@ func WriteTable(file afero.File, k, t, previousStart, currentStart, entryLen int
 
 		// advance the table index
 		index++
+	}
+
+	if entries == 0 {
+		return wrote, 0, fmt.Errorf("no matches found to write table #%d; try with a larger k", t)
 	}
 
 	eotBytes, err := WriteEOT(file, wrote/entries)

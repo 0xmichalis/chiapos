@@ -153,9 +153,6 @@ func Read(file afero.File, offset int64, entryLen, k int) (*Entry, int, error) {
 
 	case 4:
 
-		fmt.Printf("Reading f(x)=%s, pos=%s, offset=%s, collated=%s\n",
-			parts[0], parts[1], parts[2], parts[3])
-
 		fxBytes := preparePart(parts[0])
 		dst := make([]byte, hex.DecodedLen(len(fxBytes)))
 		_, err = hex.Decode(dst, fxBytes)
@@ -178,7 +175,7 @@ func Read(file afero.File, offset int64, entryLen, k int) (*Entry, int, error) {
 		if err != nil {
 			return nil, read, fmt.Errorf("cannot decode pos offset (%s): %v", posOffsetBytes, err)
 		}
-		posOffset := mybits.BytesToUint64(dst, k)
+		posOffset := mybits.BytesToUint64(dst, 10)
 
 		collatedBytes := preparePart(parts[3])
 		dst = make([]byte, hex.DecodedLen(len(collatedBytes)))
