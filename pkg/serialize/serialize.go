@@ -34,11 +34,11 @@ const EOT = "\\0"
 
 var EOTErr = errors.New("EOT")
 
-func writeTo(dst []byte, val uint64, k int) {
+func writeTo(dst []byte, val uint64, k int) []byte {
 	src := mybits.Uint64ToBytes(val, k)
 	tmp := make([]byte, hex.EncodedLen(len(src)))
 	hex.Encode(tmp, src)
-	dst = append(dst, tmp...)
+	return append(dst, tmp...)
 }
 
 func Write(file afero.File, offset int64, fx uint64, x, pos, posOffset *uint64, collated *big.Int, k int) (int, error) {
@@ -62,10 +62,10 @@ func Write(file afero.File, offset int64, fx uint64, x, pos, posOffset *uint64, 
 	// Write the pos,offset if we are provided one
 	if pos != nil {
 		dst = append(dst, ',')
-		writeTo(dst, *pos, k+1)
+		dst = writeTo(dst, *pos, k+1)
 		// posOffset has to be non-nil at this point
 		dst = append(dst, ',')
-		writeTo(dst, *posOffset, 10)
+		dst = writeTo(dst, *posOffset, 10)
 	}
 	// Write the collated value if we are provided one
 	if collated != nil {
