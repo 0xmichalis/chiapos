@@ -50,11 +50,13 @@ func OnDisk(file, spare afero.File, begin, maxSize, availableMemory, entryLen, e
 }
 
 func loadEntries(file afero.File, begin, entryLen, entryCount, k int) (entries []*serialize.Entry, err error) {
+	var read int
 	for i := 0; i < entryCount; i++ {
-		entry, _, err := serialize.Read(file, int64(begin+(i*entryLen)), entryLen, k)
+		entry, readLen, err := serialize.Read(file, int64(begin+read), entryLen, k)
 		if err != nil {
 			return nil, err
 		}
+		read += readLen
 		entries = append(entries, entry)
 	}
 
