@@ -104,14 +104,14 @@ func Read(file afero.File, offset int64, entryLen, k int) (*Entry, int, error) {
 		dst := make([]byte, hex.DecodedLen(len(parts[0])))
 		_, err = hex.Decode(dst, parts[0])
 		if err != nil {
-			return nil, read, fmt.Errorf("cannot decode f(x) (%s): %v", parts[0], err)
+			return nil, read, fmt.Errorf("cannot decode f(x) (%s) (offset: %d): %v", parts[0], offset, err)
 		}
 		fx := mybits.BytesToUint64(dst, k)
 
 		dst = make([]byte, hex.DecodedLen(len(parts[1])))
 		_, err = hex.Decode(dst, parts[1])
 		if err != nil {
-			return nil, read, fmt.Errorf("cannot decode x (%s): %v", parts[1], err)
+			return nil, read, fmt.Errorf("cannot decode x (%s) (offset: %d): %v", parts[1], offset, err)
 		}
 		x := mybits.BytesToUint64(dst, k)
 
@@ -126,21 +126,21 @@ func Read(file afero.File, offset int64, entryLen, k int) (*Entry, int, error) {
 		dst := make([]byte, hex.DecodedLen(len(parts[0])))
 		_, err = hex.Decode(dst, parts[0])
 		if err != nil {
-			return nil, read, fmt.Errorf("cannot decode f(x) (%s): %v", parts[0], err)
+			return nil, read, fmt.Errorf("cannot decode f(x) (%s) (offset: %d): %v", parts[0], offset, err)
 		}
 		fx := mybits.BytesToUint64(dst, k)
 
 		dst = make([]byte, hex.DecodedLen(len(parts[1])))
 		_, err = hex.Decode(dst, parts[1])
 		if err != nil {
-			return nil, read, fmt.Errorf("cannot decode pos (%s): %v", parts[1], err)
+			return nil, read, fmt.Errorf("cannot decode pos (%s) (offset: %d): %v", parts[1], offset, err)
 		}
 		pos := mybits.BytesToUint64(dst, k)
 
 		dst = make([]byte, hex.DecodedLen(len(parts[2])))
 		_, err = hex.Decode(dst, parts[2])
 		if err != nil {
-			return nil, read, fmt.Errorf("cannot decode pos offset (%s): %v", parts[2], err)
+			return nil, read, fmt.Errorf("cannot decode pos offset (%s) (offset: %d): %v", parts[2], offset, err)
 		}
 		posOffset := mybits.BytesToUint64(dst, k)
 
@@ -154,35 +154,35 @@ func Read(file afero.File, offset int64, entryLen, k int) (*Entry, int, error) {
 		dst := make([]byte, hex.DecodedLen(len(parts[0])))
 		_, err = hex.Decode(dst, parts[0])
 		if err != nil {
-			return nil, read, fmt.Errorf("cannot decode f(x) (%s): %v", parts[0], err)
+			return nil, read, fmt.Errorf("cannot decode f(x) (%s) (offset: %d): %v", parts[0], offset, err)
 		}
 		fx := mybits.BytesToUint64(dst, k)
 
 		dst = make([]byte, hex.DecodedLen(len(parts[1])))
 		_, err = hex.Decode(dst, parts[1])
 		if err != nil {
-			return nil, read, fmt.Errorf("cannot decode poss (%s): %v", parts[1], err)
+			return nil, read, fmt.Errorf("cannot decode pos (%s) (offset: %d): %v", parts[1], offset, err)
 		}
 		pos := mybits.BytesToUint64(dst, k)
 
 		dst = make([]byte, hex.DecodedLen(len(parts[2])))
 		_, err = hex.Decode(dst, parts[2])
 		if err != nil {
-			return nil, read, fmt.Errorf("cannot decode pos offset (%s): %v", parts[2], err)
+			return nil, read, fmt.Errorf("cannot decode pos offset (%s) (offset: %d): %v", parts[2], offset, err)
 		}
 		posOffset := mybits.BytesToUint64(dst, k)
 
 		dst = make([]byte, hex.DecodedLen(len(parts[3])))
 		_, err = hex.Decode(dst, parts[3])
 		if err != nil {
-			return nil, read, fmt.Errorf("cannot decode collated value (%s): %v", parts[3], err)
+			return nil, read, fmt.Errorf("cannot decode collated value (%s) (offset: %d): %v", parts[3], offset, err)
 		}
 		collated := new(big.Int).SetBytes(dst)
 
 		entry = &Entry{Fx: fx, Pos: &pos, Offset: &posOffset, Collated: collated}
 
 	default:
-		return nil, read, fmt.Errorf("invalid line read: %s", parts)
+		return nil, read, fmt.Errorf("invalid line read: %s (offset: %d)", parts, offset)
 	}
 
 	return entry, read, nil
