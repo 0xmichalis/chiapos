@@ -37,7 +37,7 @@ func At(x, y *big.Int, k uint64, t int, c cipher.Block) (uint64, error) {
 		c.Encrypt(cipherText[:], utils.FillToBlock(utils.ConcatBig(k, x, y).Bytes()))
 
 	case 129 <= size && size <= 256:
-		c.Encrypt(cipherText[:], x.Bytes())
+		c.Encrypt(cipherText[:], utils.FillToBlock(x.Bytes()))
 		tmp := new(big.Int).SetBytes(cipherText[:])
 		c.Encrypt(cipherText[:], utils.FillToBlock(tmp.Xor(tmp, y).Bytes()))
 
