@@ -68,19 +68,21 @@ func WritePlotFile(filename string, k, availableMemory int, memo, id []byte) err
 	for t := 2; t <= 7; t++ {
 		start = time.Now()
 		fmt.Printf("Computing table %d...\n", t)
-		wrote, entries, err := WriteTable(file, k, t, previousStart, currentStart, entryLen, fx)
+		tWrote, entries, err := WriteTable(file, k, t, previousStart, currentStart, entryLen, fx)
 		if err != nil {
 			return err
 		}
-		previousStart += wrote
-		currentStart += wrote
+		previousStart = currentStart
+		currentStart += tWrote
+		entryLen = tWrote / entries
 
 		fmt.Printf("Sorting table %d...\n", t)
-		if err := sort.OnDisk(file, spare, previousStart, currentStart, availableMemory, wrote/entries, entries, k); err != nil {
+		// Remove EOT from entries and currentStart
+		if err := sort.OnDisk(file, spare, previousStart, currentStart-entryLen, availableMemory, entryLen+1, entries-1, k); err != nil {
 			return err
 		}
 
-		fmt.Printf("F%d calculations finished in %v (wrote %s)\n", t, time.Since(start), utils.PrettySize(wrote))
+		fmt.Printf("F%d calculations finished in %v (wrote %s)\n", t, time.Since(start), utils.PrettySize(tWrote))
 	}
 
 	return nil
