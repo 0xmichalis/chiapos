@@ -149,7 +149,7 @@ func WriteTable(file afero.File, k, t, previousStart, currentStart, entryLen int
 
 	for {
 		// Read an entry
-		leftEntry, bytesRead, err := serialize.Read(file, int64(previousStart+read), entryLen, k)
+		leftEntry, bytesRead, err := serialize.Read(file, int64(previousStart+read), entryLen+1, k)
 		if err == serialize.EOTErr || err == io.EOF {
 			break
 		}

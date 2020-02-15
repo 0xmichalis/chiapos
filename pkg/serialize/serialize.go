@@ -88,9 +88,21 @@ func preparePart(part []byte) []byte {
 func Read(file afero.File, offset int64, entryLen, k int) (*Entry, int, error) {
 	e := make([]byte, entryLen)
 
+	// TODO: Rewrite this to properly stop reading when coming up against
+	// a delimeter (newline in our case).
 	read, err := file.ReadAt(e, offset)
 	if err != nil {
 		return nil, read, err
+	}
+
+	// HACK: collated values unfortunately can break the assumption
+	// that all entries have fixed length so if our entry contains
+	// a newline not at the end of the entry, then we need to drop
+	// what we read up to the newline.
+	newlineIndex := bytes.Index(e, []byte("\n"))
+	if newlineIndex != -1 && newlineIndex != len(e)-1 && newlineIndex != 0 {
+		e = e[:newlineIndex+1]
+		read = len(e)
 	}
 
 	if bytes.Contains(e, []byte(EOT)) {
