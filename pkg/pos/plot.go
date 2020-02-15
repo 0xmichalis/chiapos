@@ -59,7 +59,6 @@ func WritePlotFile(filename string, k, availableMemory int, memo, id []byte) err
 	fmt.Printf("F1 calculations finished in %v (wrote %s)\n", time.Since(start), utils.PrettySize(wrote))
 
 	fmt.Println("Computing table 2...")
-	start = time.Now()
 	fx, err := NewFx(uint64(k), id)
 	if err != nil {
 		return err
@@ -68,6 +67,7 @@ func WritePlotFile(filename string, k, availableMemory int, memo, id []byte) err
 	previousStart := headerLen
 	currentStart := headerLen + wrote
 	for t := 2; t <= 7; t++ {
+		start = time.Now()
 		wrote, err := WriteTable(file, k, t, previousStart, currentStart, entryLen, fx)
 		if err != nil {
 			return err
@@ -75,6 +75,7 @@ func WritePlotFile(filename string, k, availableMemory int, memo, id []byte) err
 		previousStart += wrote
 		currentStart += wrote
 		entryLen = wrote / maxNumber
+		fmt.Printf("F%d calculations finished in %v (wrote %s)\n", t, time.Since(start), utils.PrettySize(wrote))
 		break // TODO: REMOVE
 	}
 
@@ -99,11 +100,27 @@ func WriteFirstTable(file afero.File, k, start int, id []byte) (int, error) {
 		}
 		wrote += n
 	}
-	if _, err := file.Write([]byte(serialize.EOT)); err != nil {
-		return wrote, err
+	// TODO: int64 to int conversions are not safe in 32-bit platforms
+	eotBytes, err := WriteEOT(file, wrote/int(maxNumber))
+	if err != nil {
+		return wrote + eotBytes, err
 	}
 	fmt.Printf("Wrote %d entries (size: %s)\n", maxNumber, utils.PrettySize(wrote))
-	return wrote, nil
+	return wrote + eotBytes, nil
+}
+
+// WriteEOT writes the last entry in the table that should signal
+// that we just finished reading the table.
+func WriteEOT(file afero.File, entryLen int) (int, error) {
+	eotEntry := []byte(serialize.EOT)
+	// TODO: newlines are merely added for readability of the plot
+	// but readability should not be a goal so remove them eventually
+	// and follow the format used in the reference implementation.
+	newLine := []byte("\n")
+	// entries are supposed to be larger than EOT so we should
+	// always prepend bytes here.
+	rest := make([]byte, entryLen-len(eotEntry)-len(newLine))
+	return file.Write(append(eotEntry, append(rest, newLine...)...))
 }
 
 // WriteTable reads the t-1'th table from the file and writes the t'th table.
