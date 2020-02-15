@@ -175,14 +175,14 @@ func Read(file afero.File, offset int64, entryLen, k int) (*Entry, int, error) {
 		dst = make([]byte, hex.DecodedLen(len(parts[3])))
 		_, err = hex.Decode(dst, parts[3])
 		if err != nil {
-			return nil, read, fmt.Errorf("cannot decode pos offset: %v", err)
+			return nil, read, fmt.Errorf("cannot decode collated value: %v", err)
 		}
 		collated := new(big.Int).SetBytes(dst)
 
 		entry = &Entry{Fx: fx, Pos: &pos, Offset: &posOffset, Collated: collated}
 
 	default:
-		return nil, read, fmt.Errorf("invalid line read: %v", parts)
+		return nil, read, fmt.Errorf("invalid line read: %s", parts)
 	}
 
 	return entry, read, nil
