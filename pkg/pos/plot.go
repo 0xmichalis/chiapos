@@ -58,7 +58,6 @@ func WritePlotFile(filename string, k, availableMemory int, memo, id []byte) err
 	}
 	fmt.Printf("F1 calculations finished in %v (wrote %s)\n", time.Since(start), utils.PrettySize(wrote))
 
-	fmt.Println("Computing table 2...")
 	fx, err := NewFx(uint64(k), id)
 	if err != nil {
 		return err
@@ -68,6 +67,7 @@ func WritePlotFile(filename string, k, availableMemory int, memo, id []byte) err
 	currentStart := headerLen + wrote
 	for t := 2; t <= 7; t++ {
 		start = time.Now()
+		fmt.Printf("Computing table %d...\n", t)
 		wrote, err := WriteTable(file, k, t, previousStart, currentStart, entryLen, fx)
 		if err != nil {
 			return err
@@ -76,7 +76,6 @@ func WritePlotFile(filename string, k, availableMemory int, memo, id []byte) err
 		currentStart += wrote
 		entryLen = wrote / maxNumber
 		fmt.Printf("F%d calculations finished in %v (wrote %s)\n", t, time.Since(start), utils.PrettySize(wrote))
-		break // TODO: REMOVE
 	}
 
 	return nil
@@ -127,7 +126,8 @@ func WriteEOT(file afero.File, entryLen int) (int, error) {
 func WriteTable(file afero.File, k, t, previousStart, currentStart, entryLen int, fx *Fx) (int, error) {
 	var (
 		read    int
-		written int
+		wrote   int
+		entries int
 
 		bucketID     uint64
 		leftBucketID uint64
@@ -144,7 +144,7 @@ func WriteTable(file afero.File, k, t, previousStart, currentStart, entryLen int
 			break
 		}
 		if err != nil {
-			return written, fmt.Errorf("cannot read left entry: %v", err)
+			return wrote, fmt.Errorf("cannot read left entry: %v", err)
 		}
 		read += bytesRead
 		leftEntry.Index = index
@@ -166,20 +166,21 @@ func WriteTable(file afero.File, k, t, previousStart, currentStart, entryLen int
 				for _, m := range FindMatches(leftBucket, rightBucket) {
 					f, err := fx.Calculate(t, m.Left, m.LeftMetadata, m.RightMetadata)
 					if err != nil {
-						return written, err
+						return wrote, err
 					}
 					// This is the collated output stored next to the entry - useful
 					// for generating outputs for the next table.
 					collated, err := Collate(t, uint64(k), m.LeftMetadata, m.RightMetadata)
 					if err != nil {
-						return written, err
+						return wrote, err
 					}
 					// Now write the new output in the next table.
-					w, err := serialize.Write(file, int64(currentStart+written), f, nil, &m.LeftPosition, &m.Offset, collated, k)
+					w, err := serialize.Write(file, int64(currentStart+wrote), f, nil, &m.LeftPosition, &m.Offset, collated, k)
 					if err != nil {
-						return written + w, err
+						return wrote + w, err
 					}
-					written += w
+					wrote += w
+					entries++
 				}
 			}
 			if leftBucketID == bucketID+2 {
@@ -200,7 +201,13 @@ func WriteTable(file afero.File, k, t, previousStart, currentStart, entryLen int
 		index++
 	}
 
-	return written, nil
+	eotBytes, err := WriteEOT(file, wrote/entries)
+	if err != nil {
+		return wrote + eotBytes, err
+	}
+	fmt.Printf("Wrote %d entries (size: %s)\n", entries, utils.PrettySize(wrote))
+
+	return wrote + eotBytes, nil
 }
 
 // WriteHeader writes the plot file header to a file
