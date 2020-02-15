@@ -108,7 +108,7 @@ func Read(file afero.File, offset int64, entryLen, k int) (*Entry, int, error) {
 		dst := make([]byte, hex.DecodedLen(len(fxBytes)))
 		_, err = hex.Decode(dst, fxBytes)
 		if err != nil {
-			return nil, read, fmt.Errorf("cannot decode f(x) (%s) (offset: %d): %v", fxBytes, offset, err)
+			return nil, read, fmt.Errorf("cannot decode f(x) (%s): %v", fxBytes, err)
 		}
 		fx := mybits.BytesToUint64(dst, k)
 
@@ -116,7 +116,7 @@ func Read(file afero.File, offset int64, entryLen, k int) (*Entry, int, error) {
 		dst = make([]byte, hex.DecodedLen(len(xBytes)))
 		_, err = hex.Decode(dst, xBytes)
 		if err != nil {
-			return nil, read, fmt.Errorf("cannot decode x (%s) (offset: %d): %v", xBytes, offset, err)
+			return nil, read, fmt.Errorf("cannot decode x (%s): %v", xBytes, err)
 		}
 		x := mybits.BytesToUint64(dst, k)
 
@@ -129,7 +129,7 @@ func Read(file afero.File, offset int64, entryLen, k int) (*Entry, int, error) {
 		dst := make([]byte, hex.DecodedLen(len(fxBytes)))
 		_, err = hex.Decode(dst, fxBytes)
 		if err != nil {
-			return nil, read, fmt.Errorf("cannot decode f(x) (%s) (offset: %d): %v", fxBytes, offset, err)
+			return nil, read, fmt.Errorf("cannot decode f(x) (%s): %v", fxBytes, err)
 		}
 		fx := mybits.BytesToUint64(dst, k)
 
@@ -137,7 +137,7 @@ func Read(file afero.File, offset int64, entryLen, k int) (*Entry, int, error) {
 		dst = make([]byte, hex.DecodedLen(len(posBytes)))
 		_, err = hex.Decode(dst, posBytes)
 		if err != nil {
-			return nil, read, fmt.Errorf("cannot decode pos (%s) (offset: %d): %v", posBytes, offset, err)
+			return nil, read, fmt.Errorf("cannot decode pos (%s): %v", posBytes, err)
 		}
 		pos := mybits.BytesToUint64(dst, k)
 
@@ -145,7 +145,7 @@ func Read(file afero.File, offset int64, entryLen, k int) (*Entry, int, error) {
 		dst = make([]byte, hex.DecodedLen(len(posOffsetBytes)))
 		_, err = hex.Decode(dst, posOffsetBytes)
 		if err != nil {
-			return nil, read, fmt.Errorf("cannot decode pos offset (%s) (offset: %d): %v", posOffsetBytes, offset, err)
+			return nil, read, fmt.Errorf("cannot decode pos offset (%s): %v", posOffsetBytes, err)
 		}
 		posOffset := mybits.BytesToUint64(dst, k)
 
@@ -160,7 +160,7 @@ func Read(file afero.File, offset int64, entryLen, k int) (*Entry, int, error) {
 		dst := make([]byte, hex.DecodedLen(len(fxBytes)))
 		_, err = hex.Decode(dst, fxBytes)
 		if err != nil {
-			return nil, read, fmt.Errorf("cannot decode f(x) (%s) (offset: %d): %v", fxBytes, offset, err)
+			return nil, read, fmt.Errorf("cannot decode f(x) (%s): %v", fxBytes, err)
 		}
 		fx := mybits.BytesToUint64(dst, k)
 
@@ -168,7 +168,7 @@ func Read(file afero.File, offset int64, entryLen, k int) (*Entry, int, error) {
 		dst = make([]byte, hex.DecodedLen(len(posBytes)))
 		_, err = hex.Decode(dst, posBytes)
 		if err != nil {
-			return nil, read, fmt.Errorf("cannot decode pos (%s) (offset: %d): %v", posBytes, offset, err)
+			return nil, read, fmt.Errorf("cannot decode pos (%s): %v", posBytes, err)
 		}
 		pos := mybits.BytesToUint64(dst, k)
 
@@ -176,7 +176,7 @@ func Read(file afero.File, offset int64, entryLen, k int) (*Entry, int, error) {
 		dst = make([]byte, hex.DecodedLen(len(posOffsetBytes)))
 		_, err = hex.Decode(dst, posOffsetBytes)
 		if err != nil {
-			return nil, read, fmt.Errorf("cannot decode pos offset (%s) (offset: %d): %v", posOffsetBytes, offset, err)
+			return nil, read, fmt.Errorf("cannot decode pos offset (%s): %v", posOffsetBytes, err)
 		}
 		posOffset := mybits.BytesToUint64(dst, k)
 
@@ -184,14 +184,14 @@ func Read(file afero.File, offset int64, entryLen, k int) (*Entry, int, error) {
 		dst = make([]byte, hex.DecodedLen(len(collatedBytes)))
 		_, err = hex.Decode(dst, collatedBytes)
 		if err != nil {
-			return nil, read, fmt.Errorf("cannot decode collated value (%s) (offset: %d): %v", collatedBytes, offset, err)
+			return nil, read, fmt.Errorf("cannot decode collated value (%s): %v", collatedBytes, err)
 		}
 		collated := new(big.Int).SetBytes(dst)
 
 		entry = &Entry{Fx: fx, Pos: &pos, Offset: &posOffset, Collated: collated}
 
 	default:
-		return nil, read, fmt.Errorf("invalid line read: %s (offset: %d)", parts, offset)
+		return nil, read, fmt.Errorf("invalid line read: %s", parts)
 	}
 
 	return entry, read, nil
