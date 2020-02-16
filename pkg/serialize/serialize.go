@@ -85,24 +85,67 @@ func preparePart(part []byte) []byte {
 	return bytes.TrimSpace(bytes.TrimRight(part, ","))
 }
 
-func Read(file afero.File, offset int64, entryLen, k int) (*Entry, int, error) {
+// read ensures all bytes up to the delimeter will be read.
+// If more bytes are read, the extra bytes are dropped.
+// If less bytes are read, one more read is performed which
+// should include the next delimeter.
+func read(file afero.File, offset int64, delimeter []byte, entryLen int) (int, []byte, error) {
 	e := make([]byte, entryLen)
 
-	// TODO: Rewrite this to properly stop reading when coming up against
-	// a delimeter (newline in our case).
 	read, err := file.ReadAt(e, offset)
 	if err != nil {
-		return nil, read, err
+		return read, nil, err
 	}
 
+	delimeterIndex := bytes.Index(e, delimeter)
+	if delimeterIndex == -1 {
+		// If there is no delimeter we need to read more.
+		// One more read of entryLen bytes should suffice.
+		additional := make([]byte, entryLen)
+		more, err := file.ReadAt(additional, offset+int64(read))
+		if err != nil {
+			return read + more, nil, err
+		}
+		delimeterIndex = bytes.Index(additional, delimeter)
+		e = append(e, additional[:delimeterIndex+1]...)
+		return len(e), e, nil
+	}
+
+	// if we got a delimeter in our read bytes, it is either in the end
+	// of the byte slice (normal case), somewhere in between (collated
+	// value is size is not fixed for some reason), or at the start (bad read).
+	read, e = dropDelimeters(file, e, delimeter)
+	return read, e, nil
+}
+
+func dropDelimeters(file afero.File, e, delimeter []byte) (int, []byte) {
+	delimeterIndex := bytes.Index(e, delimeter)
+	switch delimeterIndex {
+
+	case 0:
+		e = bytes.TrimLeft(e, string(delimeter))
+		// There may be more than one delimeter as part of this entry...
+		var read int
+		read, e = dropDelimeters(file, e, delimeter)
+		return read + 1, e
+
+	case len(e):
+		// normal case; do nothing
+
+	default:
+		e = e[:delimeterIndex+1]
+	}
+	return len(e), e
+}
+
+func Read(file afero.File, offset int64, entryLen, k int) (*Entry, int, error) {
 	// HACK: collated values unfortunately can break the assumption
 	// that all entries have fixed length so if our entry contains
-	// a newline not at the end of the entry, then we need to drop
+	// a delimeter not at the end of the entry, then we need to drop
 	// what we read up to the newline.
-	newlineIndex := bytes.Index(e, []byte("\n"))
-	if newlineIndex != -1 && newlineIndex != len(e)-1 && newlineIndex != 0 {
-		e = e[:newlineIndex+1]
-		read = len(e)
+	read, e, err := read(file, offset, []byte("\n"), entryLen)
+	if err != nil {
+		return nil, read, err
 	}
 
 	if bytes.Contains(e, []byte(EOT)) {
