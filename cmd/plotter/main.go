@@ -26,6 +26,8 @@ func main() {
 	var key [32]byte
 	var err error
 	if *keyPath == "" {
+		// TODO: Change to a private-public key pair and feed the
+		// public key as the plot seed.
 		fmt.Println("Generating private key...")
 		_, err = rand.Read(key[:])
 	} else {
