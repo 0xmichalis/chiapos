@@ -1,6 +1,7 @@
 package pos
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"math"
@@ -42,7 +43,7 @@ func WritePlotFile(filename string, k, availableMemory int, memo, id []byte) err
 	fmt.Println("Sorting table 1...")
 	maxNumber := int(math.Pow(2, float64(k)))
 	entryLen := wrote / maxNumber
-	if err := sort.OnDisk(file, fs, headerLen, wrote+headerLen, availableMemory, entryLen, maxNumber, k); err != nil {
+	if err := sort.OnDisk(file, fs, headerLen, wrote+headerLen, availableMemory, entryLen, k); err != nil {
 		return err
 	}
 	fmt.Printf("F1 calculations finished in %v (wrote %s)\n", time.Since(start), utils.PrettySize(wrote))
@@ -67,7 +68,7 @@ func WritePlotFile(filename string, k, availableMemory int, memo, id []byte) err
 
 		fmt.Printf("Sorting table %d...\n", t)
 		// Remove EOT from entries and currentStart
-		if err := sort.OnDisk(file, fs, previousStart, currentStart-entryLen, availableMemory, entryLen+1, entries-1, k); err != nil {
+		if err := sort.OnDisk(file, fs, previousStart, currentStart-entryLen, availableMemory, entryLen+1, k); err != nil {
 			return err
 		}
 
@@ -139,11 +140,11 @@ func WriteTable(file afero.File, k, t, previousStart, currentStart, entryLen int
 	for {
 		// Read an entry
 		leftEntry, bytesRead, err := serialize.Read(file, int64(previousStart+read), entryLen+1, k)
-		if err == serialize.EOTErr || err == io.EOF {
+		if errors.Is(err, serialize.EOTErr) || errors.Is(err, io.EOF) {
 			break
 		}
 		if err != nil {
-			return wrote, entries, fmt.Errorf("cannot read left entry: %v", err)
+			return wrote, entries, fmt.Errorf("cannot read left entry: %w", err)
 		}
 		read += bytesRead
 		leftEntry.Index = index

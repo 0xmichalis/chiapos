@@ -47,7 +47,7 @@ func main() {
 	}
 	fmt.Printf("Available memory: %dMB\n", *availMem/(1024*1024))
 
-	fmt.Printf("Generating plot at %s\n", *plotPath)
+	fmt.Printf("Generating plot at %s with k=%d\n", *plotPath, *k)
 	plotStart := time.Now()
 	if err := pos.WritePlotFile(*plotPath, *k, *availMem, nil, key[:]); err != nil {
 		fmt.Printf("cannot write plot: %v\n", err)

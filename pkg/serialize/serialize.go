@@ -43,7 +43,7 @@ func writeTo(dst []byte, val uint64, k int) []byte {
 
 func Write(file afero.File, offset int64, fx uint64, x, pos, posOffset *uint64, collated *big.Int, k int) (int, error) {
 	if _, err := file.Seek(offset, io.SeekStart); err != nil {
-		return 0, fmt.Errorf("cannot set file offset at %d: %v", offset, err)
+		return 0, fmt.Errorf("cannot set file offset at %d: %w", offset, err)
 	}
 	// TODO: Batch writes
 	// TODO: Write in binary instead of text format (FlatBuffers?)
@@ -163,7 +163,7 @@ func Read(file afero.File, offset int64, entryLen, k int) (*Entry, int, error) {
 		dst := make([]byte, hex.DecodedLen(len(fxBytes)))
 		_, err = hex.Decode(dst, fxBytes)
 		if err != nil {
-			return nil, read, fmt.Errorf("cannot decode f(x) (%s): %v", fxBytes, err)
+			return nil, read, fmt.Errorf("cannot decode f(x) (%s): %w", fxBytes, err)
 		}
 		fx := mybits.BytesToUint64(dst, k)
 
@@ -171,7 +171,7 @@ func Read(file afero.File, offset int64, entryLen, k int) (*Entry, int, error) {
 		dst = make([]byte, hex.DecodedLen(len(xBytes)))
 		_, err = hex.Decode(dst, xBytes)
 		if err != nil {
-			return nil, read, fmt.Errorf("cannot decode x (%s): %v", xBytes, err)
+			return nil, read, fmt.Errorf("cannot decode x (%s): %w", xBytes, err)
 		}
 		x := mybits.BytesToUint64(dst, k)
 
@@ -184,7 +184,7 @@ func Read(file afero.File, offset int64, entryLen, k int) (*Entry, int, error) {
 		dst := make([]byte, hex.DecodedLen(len(fxBytes)))
 		_, err = hex.Decode(dst, fxBytes)
 		if err != nil {
-			return nil, read, fmt.Errorf("cannot decode f(x) (%s): %v", fxBytes, err)
+			return nil, read, fmt.Errorf("cannot decode f(x) (%s): %w", fxBytes, err)
 		}
 		fx := mybits.BytesToUint64(dst, k)
 
@@ -192,7 +192,7 @@ func Read(file afero.File, offset int64, entryLen, k int) (*Entry, int, error) {
 		dst = make([]byte, hex.DecodedLen(len(posBytes)))
 		_, err = hex.Decode(dst, posBytes)
 		if err != nil {
-			return nil, read, fmt.Errorf("cannot decode pos (%s): %v", posBytes, err)
+			return nil, read, fmt.Errorf("cannot decode pos (%s): %w", posBytes, err)
 		}
 		pos := mybits.BytesToUint64(dst, k)
 
@@ -200,7 +200,7 @@ func Read(file afero.File, offset int64, entryLen, k int) (*Entry, int, error) {
 		dst = make([]byte, hex.DecodedLen(len(posOffsetBytes)))
 		_, err = hex.Decode(dst, posOffsetBytes)
 		if err != nil {
-			return nil, read, fmt.Errorf("cannot decode pos offset (%s): %v", posOffsetBytes, err)
+			return nil, read, fmt.Errorf("cannot decode pos offset (%s): %w", posOffsetBytes, err)
 		}
 		posOffset := mybits.BytesToUint64(dst, k)
 
@@ -212,7 +212,7 @@ func Read(file afero.File, offset int64, entryLen, k int) (*Entry, int, error) {
 		dst := make([]byte, hex.DecodedLen(len(fxBytes)))
 		_, err = hex.Decode(dst, fxBytes)
 		if err != nil {
-			return nil, read, fmt.Errorf("cannot decode f(x) (%s): %v", fxBytes, err)
+			return nil, read, fmt.Errorf("cannot decode f(x) (%s): %w", fxBytes, err)
 		}
 		fx := mybits.BytesToUint64(dst, k)
 
@@ -220,7 +220,7 @@ func Read(file afero.File, offset int64, entryLen, k int) (*Entry, int, error) {
 		dst = make([]byte, hex.DecodedLen(len(posBytes)))
 		_, err = hex.Decode(dst, posBytes)
 		if err != nil {
-			return nil, read, fmt.Errorf("cannot decode pos (%s): %v", posBytes, err)
+			return nil, read, fmt.Errorf("cannot decode pos (%s): %w", posBytes, err)
 		}
 		pos := mybits.BytesToUint64(dst, k)
 
@@ -228,7 +228,7 @@ func Read(file afero.File, offset int64, entryLen, k int) (*Entry, int, error) {
 		dst = make([]byte, hex.DecodedLen(len(posOffsetBytes)))
 		_, err = hex.Decode(dst, posOffsetBytes)
 		if err != nil {
-			return nil, read, fmt.Errorf("cannot decode pos offset (%s): %v", posOffsetBytes, err)
+			return nil, read, fmt.Errorf("cannot decode pos offset (%s): %w", posOffsetBytes, err)
 		}
 		posOffset := mybits.BytesToUint64(dst, 10)
 
@@ -236,7 +236,7 @@ func Read(file afero.File, offset int64, entryLen, k int) (*Entry, int, error) {
 		dst = make([]byte, hex.DecodedLen(len(collatedBytes)))
 		_, err = hex.Decode(dst, collatedBytes)
 		if err != nil {
-			return nil, read, fmt.Errorf("cannot decode collated value (%s): %v", collatedBytes, err)
+			return nil, read, fmt.Errorf("cannot decode collated value (%s): %w", collatedBytes, err)
 		}
 		collated := new(big.Int).SetBytes(dst)
 

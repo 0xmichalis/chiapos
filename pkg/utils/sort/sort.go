@@ -3,7 +3,7 @@ package sort
 import (
 	"errors"
 	"fmt"
-	"math/bits"
+	"io"
 	"sort"
 
 	"github.com/spf13/afero"
@@ -15,30 +15,35 @@ import (
 var buckets = make(map[string][]*serialize.Entry)
 
 // bucketIndex returns the index of the target bucket for this
-// entry. b is the smallest number such that 2^b >= 2 * num_entries.
-func bucketIndex(entry uint64, b, k int) string {
-	return string(mybits.Uint64ToBytes(entry, k)[:b-1])
+// entry.
+func bucketIndex(entry uint64, k int) string {
+	// Keep the 8 most significant bits
+	bitRepresentation := fmt.Sprintf("%08b", mybits.Uint64ToBytes(entry, k)[:1])
+	// Drop [, ], and the 4 last significant bits
+	return bitRepresentation[1 : len(bitRepresentation)/2]
 }
 
 // OnDisk performs sorting on the given file on disk, given begin which
 // is the start of the data in the file in need of sorting, and availableMemory
 // is the available memory in which sorting can be done.
-func OnDisk(file afero.File, fs afero.Fs, begin, maxSize, availableMemory, entryLen, entryCount, k int) error {
+func OnDisk(file afero.File, fs afero.Fs, begin, maxSize, availableMemory, entryLen, k int) error {
 	// TODO: FIXME - note that we need to take into account the
 	// memory that will be used by loading the unsorted buckets,
 	// the sorted buckets that are currently in memory, plus any
 	// extra memory consumed by SortInMemory.
 	if availableMemory > maxSize-begin {
 		// if we can sort in memory, do that
-		return inMemory(file, begin, entryLen, entryCount, k)
+		fmt.Println("Sorting in memory...")
+		return inMemory(file, begin, entryLen, k)
 	}
+	fmt.Println("Sorting on disk...")
 
 	// Sort plot into buckets
 	var read, write int
 	var exit bool
 	for {
 		// load an amount of entries that can fit into memory
-		bucketIndexes, entriesBytes, err := sortInMemory(file, begin+read, entryLen, availableMemory/entryLen, k)
+		bucketIndexes, entriesBytes, err := sortInMemory(file, begin+read, entryLen, k)
 		if errors.Is(err, serialize.EOTErr) {
 			exit = true
 		} else if err != nil {
@@ -76,22 +81,9 @@ func OnDisk(file afero.File, fs afero.Fs, begin, maxSize, availableMemory, entry
 	return nil
 }
 
-func loadEntries(file afero.File, begin, entryLen, entryCount, k int) (entries []*serialize.Entry, read int, err error) {
-	for i := 0; i < entryCount; i++ {
-		entry, readLen, err := serialize.Read(file, int64(begin+read), entryLen, k)
-		if err != nil {
-			return entries, read + readLen, err
-		}
-		read += readLen
-		entries = append(entries, entry)
-	}
-
-	return entries, read, nil
-}
-
 // inMemory sorts the provided entries in memory.
-func inMemory(file afero.File, begin, entryLen, entryCount int, k int) error {
-	bucketIndexes, _, err := sortInMemory(file, begin, entryLen, entryCount, k)
+func inMemory(file afero.File, begin, entryLen int, k int) error {
+	bucketIndexes, _, err := sortInMemory(file, begin, entryLen, k)
 	if err != nil {
 		return fmt.Errorf("failed to sort in memory: %w", err)
 	}
@@ -102,17 +94,15 @@ func inMemory(file afero.File, begin, entryLen, entryCount int, k int) error {
 
 // sortInMemory sorts in memory, then returns the sorted bucket indexes
 // so callers can write the buckets on disk.
-func sortInMemory(file afero.File, begin, entryLen, entryCount int, k int) ([]string, int, error) {
-	entries, read, err := loadEntries(file, begin, entryLen, entryCount, k)
+func sortInMemory(file afero.File, begin, entryLen int, k int) ([]string, int, error) {
+	entries, read, err := loadEntries(file, begin, entryLen, k)
 	if err != nil {
 		return nil, read, fmt.Errorf("cannot load entries in memory: %w", err)
 	}
 
 	var bucketIndexes []string
-	// TODO: Handle case where entries is small
-	b := bits.Len64(uint64(2*len(entries))) / 8
 	for _, e := range entries {
-		bIndex := bucketIndex(e.Fx, b, k)
+		bIndex := bucketIndex(e.Fx, k)
 		bEntries, ok := buckets[bIndex]
 		if !ok {
 			buckets[bIndex] = []*serialize.Entry{e}
@@ -126,7 +116,7 @@ func sortInMemory(file afero.File, begin, entryLen, entryCount int, k int) ([]st
 				}
 			}
 			if index != -1 {
-				buckets[bIndex] = append(append(bEntries[:index], e), bEntries[index+1:]...)
+				buckets[bIndex] = append(append(bEntries[:index], e), bEntries[index:]...)
 			} else {
 				buckets[bIndex] = append(buckets[bIndex], e)
 			}
@@ -135,6 +125,20 @@ func sortInMemory(file afero.File, begin, entryLen, entryCount int, k int) ([]st
 
 	sort.Strings(bucketIndexes)
 	return bucketIndexes, read, nil
+}
+
+func loadEntries(file afero.File, begin, entryLen, k int) (entries []*serialize.Entry, read int, err error) {
+	for {
+		entry, readLen, err := serialize.Read(file, int64(begin+read), entryLen, k)
+		if errors.Is(err, serialize.EOTErr) || errors.Is(err, io.EOF) {
+			return entries, read + readLen, nil
+		}
+		if err != nil {
+			return entries, read + readLen, err
+		}
+		read += readLen
+		entries = append(entries, entry)
+	}
 }
 
 // writeBuckets writes the buckets for the provided indexes in file.
