@@ -14,8 +14,6 @@ import (
 	"github.com/kargakis/gochia/pkg/utils/sort"
 )
 
-var AppFs = afero.NewOsFs()
-
 // This is Phase 1, or forward propagation. During this phase, all of the 7 tables,
 // and f functions, are evaluated. The result is an intermediate plot file, that is
 // several times larger than what the final file will be, but that has all of the
@@ -23,7 +21,8 @@ var AppFs = afero.NewOsFs()
 // AES256, and each encryption provides multiple output values. Then, the rest of the
 // f functions are computed, and a sort on disk happens for each table.
 func WritePlotFile(filename string, k, availableMemory int, memo, id []byte) error {
-	file, err := AppFs.Create(filename)
+	fs := afero.NewOsFs()
+	file, err := fs.Create(filename)
 	if err != nil {
 		return err
 	}
@@ -40,20 +39,10 @@ func WritePlotFile(filename string, k, availableMemory int, memo, id []byte) err
 		return err
 	}
 
-	// if we know beforehand there is not enough space
-	// to sort in memory, we can prepare the spare file
-	var spare afero.File
-	if wrote > availableMemory {
-		spare, err = AppFs.Create(filename + "-spare")
-		if err != nil {
-			return err
-		}
-	}
-
 	fmt.Println("Sorting table 1...")
 	maxNumber := int(math.Pow(2, float64(k)))
 	entryLen := wrote / maxNumber
-	if err := sort.OnDisk(file, spare, headerLen, wrote+headerLen, availableMemory, entryLen, maxNumber, k); err != nil {
+	if err := sort.OnDisk(file, fs, headerLen, wrote+headerLen, availableMemory, entryLen, maxNumber, k); err != nil {
 		return err
 	}
 	fmt.Printf("F1 calculations finished in %v (wrote %s)\n", time.Since(start), utils.PrettySize(wrote))
@@ -78,7 +67,7 @@ func WritePlotFile(filename string, k, availableMemory int, memo, id []byte) err
 
 		fmt.Printf("Sorting table %d...\n", t)
 		// Remove EOT from entries and currentStart
-		if err := sort.OnDisk(file, spare, previousStart, currentStart-entryLen, availableMemory, entryLen+1, entries-1, k); err != nil {
+		if err := sort.OnDisk(file, fs, previousStart, currentStart-entryLen, availableMemory, entryLen+1, entries-1, k); err != nil {
 			return err
 		}
 

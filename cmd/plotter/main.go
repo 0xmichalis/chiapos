@@ -26,12 +26,10 @@ func main() {
 	var key [32]byte
 	var err error
 	if *keyPath == "" {
-		// TODO: Change to a private-public key pair and feed the
-		// public key as the plot seed.
-		fmt.Println("Generating private key...")
+		fmt.Println("Generating seed...")
 		_, err = rand.Read(key[:])
 	} else {
-		fmt.Printf("Reading private key from %s...\n", *keyPath)
+		fmt.Printf("Reading seed from %s...\n", *keyPath)
 		_, err = ioutil.ReadFile(*keyPath)
 	}
 	if err != nil {
