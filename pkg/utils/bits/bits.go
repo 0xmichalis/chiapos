@@ -111,7 +111,11 @@ func (be bigEndian) PutUint64(b []byte, v uint64) {
 // is provided, only enough bytes necessary to represent the
 // integer are serialized.
 func Uint64ToBytes(n uint64, k int) []byte {
-	b := make([]byte, (k/8)+1)
+	bSize := k / 8
+	if k%8 != 0 {
+		bSize++
+	}
+	b := make([]byte, bSize)
 	bigEndian{Len: k}.PutUint64(b, n)
 	return b
 }

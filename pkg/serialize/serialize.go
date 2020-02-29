@@ -45,7 +45,6 @@ func Write(file afero.File, offset int64, fx uint64, x, pos, posOffset *uint64, 
 	if _, err := file.Seek(offset, io.SeekStart); err != nil {
 		return 0, fmt.Errorf("cannot set file offset at %d: %w", offset, err)
 	}
-	// TODO: Batch writes
 	// TODO: Write in binary instead of text format (FlatBuffers?)
 	src := mybits.Uint64ToBytes(fx, k)
 	dst := make([]byte, hex.EncodedLen(len(src)))

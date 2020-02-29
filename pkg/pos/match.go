@@ -24,7 +24,6 @@ type Match struct {
 // FindMatches compares the two buckets and returns any matches.
 func FindMatches(left, right []*serialize.Entry) []Match {
 	var matches []Match
-
 	for _, le := range left {
 		for _, re := range right {
 			if matchEntries(le.Fx, re.Fx) {
