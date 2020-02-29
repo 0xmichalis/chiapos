@@ -13,6 +13,10 @@ import (
 	mybits "github.com/kargakis/gochia/pkg/utils/bits"
 )
 
+const EOT = "\\0"
+
+var EOTErr = errors.New("EOT")
+
 type Entry struct {
 	Fx uint64
 	X  *uint64
@@ -30,9 +34,11 @@ type Entry struct {
 	Index int
 }
 
-const EOT = "\\0"
+type ByOutput []*Entry
 
-var EOTErr = errors.New("EOT")
+func (b ByOutput) Len() int           { return len(b) }
+func (b ByOutput) Swap(i, j int)      { b[i], b[j] = b[j], b[i] }
+func (b ByOutput) Less(i, j int) bool { return b[i].Fx < b[j].Fx }
 
 func writeTo(dst []byte, val uint64, k int) []byte {
 	src := mybits.Uint64ToBytes(val, k)

@@ -34,7 +34,7 @@ func OnDisk(file afero.File, fs afero.Fs, begin, maxSize, availableMemory, entry
 	if availableMemory > maxSize-begin {
 		// if we can sort in memory, do that
 		fmt.Println("Sorting in memory...")
-		return inMemory(file, begin, entryLen, k)
+		return sortInMem(file, begin, entryLen, k)
 	}
 	fmt.Println("Sorting on disk...")
 
@@ -187,4 +187,25 @@ func getBucketsInOrder() []afero.File {
 	}
 
 	return buckets
+}
+
+// sortInMem sorts a table in memory.
+func sortInMem(file afero.File, begin, entryLen int, k int) error {
+	entries, _, err := loadEntries(file, begin, entryLen, k)
+	if err != nil {
+		return fmt.Errorf("cannot load entries in memory: %w", err)
+	}
+
+	sort.Sort(serialize.ByOutput(entries))
+
+	var wrote int
+	for _, e := range entries {
+		n, err := serialize.Write(file, int64(begin+wrote), e.Fx, e.X, e.Pos, e.Offset, e.Collated, k)
+		if err != nil {
+			return fmt.Errorf("cannot write sorted values: %w", err)
+		}
+		wrote += n
+	}
+
+	return nil
 }
