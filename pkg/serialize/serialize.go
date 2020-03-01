@@ -34,11 +34,28 @@ type Entry struct {
 	Index int
 }
 
-type ByOutput []*Entry
+type ByOutput struct {
+	Entries    []*Entry
+	TableIndex int
+}
 
-func (b ByOutput) Len() int           { return len(b) }
-func (b ByOutput) Swap(i, j int)      { b[i], b[j] = b[j], b[i] }
-func (b ByOutput) Less(i, j int) bool { return b[i].Fx < b[j].Fx }
+func (b ByOutput) Len() int      { return len(b.Entries) }
+func (b ByOutput) Swap(i, j int) { b.Entries[i], b.Entries[j] = b.Entries[j], b.Entries[i] }
+func (b ByOutput) Less(i, j int) bool {
+	e := b.Entries
+
+	// Sort first and last table based on their outputs only.
+	if e[i].Fx != e[j].Fx || b.TableIndex == 1 || b.TableIndex == 7 {
+		return e[i].Fx < e[j].Fx
+	}
+
+	// If we are sorting any other than the first and last tables
+	// then we should also take into account positions and offsets.
+	if *e[i].Pos != *e[j].Pos {
+		return *e[i].Pos < *e[j].Pos
+	}
+	return *e[i].Offset < *e[j].Offset
+}
 
 func writeTo(dst []byte, val uint64, k int) []byte {
 	src := mybits.Uint64ToBytes(val, k)

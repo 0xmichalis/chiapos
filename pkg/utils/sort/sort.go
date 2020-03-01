@@ -26,7 +26,7 @@ func bucketIndex(entry uint64, k int) string {
 // OnDisk performs sorting on the given file on disk, given begin which
 // is the start of the data in the file in need of sorting, and availableMemory
 // is the available memory in which sorting can be done.
-func OnDisk(file afero.File, fs afero.Fs, begin, maxSize, availableMemory, entryLen, k int) error {
+func OnDisk(file afero.File, fs afero.Fs, begin, maxSize, availableMemory, entryLen, k, t int) error {
 	// TODO: FIXME - note that we need to take into account the
 	// memory that will be used by loading the unsorted buckets,
 	// the sorted buckets that are currently in memory, plus any
@@ -34,7 +34,7 @@ func OnDisk(file afero.File, fs afero.Fs, begin, maxSize, availableMemory, entry
 	if availableMemory > maxSize-begin {
 		// if we can sort in memory, do that
 		fmt.Println("Sorting in memory...")
-		return sortInMem(file, begin, entryLen, k)
+		return sortInMem(file, begin, entryLen, k, t)
 	}
 	fmt.Println("Sorting on disk...")
 
@@ -190,13 +190,13 @@ func getBucketsInOrder() []afero.File {
 }
 
 // sortInMem sorts a table in memory.
-func sortInMem(file afero.File, begin, entryLen int, k int) error {
+func sortInMem(file afero.File, begin, entryLen int, k, t int) error {
 	entries, _, err := loadEntries(file, begin, entryLen, k)
 	if err != nil {
 		return fmt.Errorf("cannot load entries in memory: %w", err)
 	}
 
-	sort.Sort(serialize.ByOutput(entries))
+	sort.Sort(serialize.ByOutput{Entries: entries, TableIndex: t})
 
 	var wrote int
 	for _, e := range entries {

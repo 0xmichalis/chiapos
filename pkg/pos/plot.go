@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"math"
+	"runtime"
 	"time"
 
 	"github.com/spf13/afero"
@@ -43,7 +44,7 @@ func WritePlotFile(filename string, k, availableMemory int, memo, id []byte) err
 	fmt.Println("Sorting table 1...")
 	maxNumber := int(math.Pow(2, float64(k)))
 	entryLen := wrote / maxNumber
-	if err := sort.OnDisk(file, fs, headerLen, wrote+headerLen, availableMemory, entryLen, k); err != nil {
+	if err := sort.OnDisk(file, fs, headerLen, wrote+headerLen, availableMemory, entryLen, k, 1); err != nil {
 		return err
 	}
 	fmt.Printf("F1 calculations finished in %v (wrote %s)\n", time.Since(start), utils.PrettySize(wrote))
@@ -68,7 +69,7 @@ func WritePlotFile(filename string, k, availableMemory int, memo, id []byte) err
 
 		fmt.Printf("Sorting table %d...\n", t)
 		// Remove EOT from entries and currentStart
-		if err := sort.OnDisk(file, fs, previousStart, currentStart-entryLen, availableMemory, entryLen+1, k); err != nil {
+		if err := sort.OnDisk(file, fs, previousStart, currentStart-entryLen, availableMemory, entryLen, k, t); err != nil {
 			return err
 		}
 
@@ -138,7 +139,7 @@ func WriteTable(file afero.File, k, t, previousStart, currentStart, entryLen int
 	var index int
 
 	for {
-		// Read an entry
+		// Read an entry from the previous table.
 		leftEntry, bytesRead, err := serialize.Read(file, int64(previousStart+read), entryLen, k)
 		if errors.Is(err, serialize.EOTErr) || errors.Is(err, io.EOF) {
 			break
@@ -196,6 +197,9 @@ func WriteTable(file afero.File, k, t, previousStart, currentStart, entryLen int
 				rightBucket = nil
 			}
 		}
+
+		// TODO: Needs to be profiled, maybe moved into its own thread
+		runtime.GC()
 
 		// advance the table index
 		index++
