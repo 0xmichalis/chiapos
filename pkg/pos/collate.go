@@ -9,24 +9,6 @@ import (
 	"github.com/kargakis/gochia/pkg/utils"
 )
 
-// CollaSize returns the collation size for t.
-func CollaSize(t int) (size *int, err error) {
-	size = new(int)
-	switch t {
-	case 2:
-		*size = 1
-	case 3, 7:
-		*size = 2
-	case 4, 5:
-		*size = 4
-	case 6:
-		*size = 3
-	default:
-		return nil, fmt.Errorf("collation size for t=%d is undefined", t)
-	}
-	return
-}
-
 // Collate collates left and right inputs into outputs for the next table.
 func Collate(t int, k uint64, l, r *big.Int) (*big.Int, error) {
 	switch t {

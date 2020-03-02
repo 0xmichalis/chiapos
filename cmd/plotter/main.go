@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"runtime"
 	"syscall"
 	"time"
 
@@ -13,25 +14,48 @@ import (
 )
 
 var (
+	retry    = flag.Bool("retry", false, "If set to true, try to restore from a pre-existing plot")
 	k        = flag.Int("k", 15, "Storage parameter")
 	plotPath = flag.String("f", "plot.dat", "Final path to the plot")
 	keyPath  = flag.String("key", "", "Path to key to be used as a plot seed")
 	availMem = flag.Int("m", 5*1024*1024*1024, "Max memory to use when plotting. Defaults to all OS available memory when set to zero.")
 )
 
-func main() {
-	flag.Parse()
-
-	// If a key is not provided, generate one in random
+func retrieveKey(keyPath, plotPath string, retry bool) ([32]byte, error) {
 	var key [32]byte
 	var err error
-	if *keyPath == "" {
+
+	if retry {
+		// Try to retrieve key from pre-existing plot
+		fmt.Printf("Reading seed from pre-existing plot at %s...\n", plotPath)
+		key, err = pos.GetKey(plotPath)
+	} else if keyPath == "" {
+		// If a key is not provided, generate one in random
 		fmt.Println("Generating seed...")
 		_, err = rand.Read(key[:])
 	} else {
-		fmt.Printf("Reading seed from %s...\n", *keyPath)
-		_, err = ioutil.ReadFile(*keyPath)
+		fmt.Printf("Reading seed from %s...\n", keyPath)
+		_, err = ioutil.ReadFile(keyPath)
 	}
+
+	return key, err
+}
+
+func gc() {
+	for {
+		select {
+		case <-time.Tick(10 * time.Second):
+			// TODO: Run this only we actually need to manually
+			// free up memory instead of every 10 seconds.
+			runtime.GC()
+		}
+	}
+}
+
+func main() {
+	flag.Parse()
+
+	key, err := retrieveKey(*keyPath, *plotPath, *retry)
 	if err != nil {
 		fmt.Printf("cannot set up plot seed: %v", err)
 		os.Exit(1)
@@ -47,9 +71,12 @@ func main() {
 	}
 	fmt.Printf("Available memory: %dMB\n", *availMem/(1024*1024))
 
+	// run GC manually to flush unused memory as quickly as possible
+	go gc()
+
 	fmt.Printf("Generating plot at %s with k=%d\n", *plotPath, *k)
 	plotStart := time.Now()
-	if err := pos.WritePlotFile(*plotPath, *k, *availMem, nil, key[:]); err != nil {
+	if err := pos.WritePlotFile(*plotPath, *k, *availMem, key[:], *retry); err != nil {
 		fmt.Printf("cannot write plot: %v\n", err)
 		os.Exit(1)
 	}

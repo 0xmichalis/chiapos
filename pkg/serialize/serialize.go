@@ -13,7 +13,20 @@ import (
 	mybits "github.com/kargakis/gochia/pkg/utils/bits"
 )
 
-const EOT = "\\0"
+const (
+	// End of Table special character
+	EOT = "\\0"
+
+	// size of the position offset in bits
+	posOffsetSize = 10
+
+	// entriesDelimiter is a delimiter used to separate entries
+	entriesDelimiter = '\n'
+
+	// entryDelimiter is a delimiter used to separate different
+	// parts of a single entry
+	entryDelimiter = ','
+)
 
 var EOTErr = errors.New("EOT")
 
@@ -22,10 +35,10 @@ type Entry struct {
 	X  *uint64
 
 	// Position of the left match in the previous table
-	// TODO: This should be k+1 bits.
+	// This should be k+1 bits.
 	Pos *uint64
 	// Offset to find the right match in the previous table
-	// TODO: This should be a 10-bit offset.
+	// This should be a 10-bit offset.
 	Offset *uint64
 	// Collated value to be used as input in the next table.
 	Collated *big.Int
@@ -57,6 +70,22 @@ func (b ByOutput) Less(i, j int) bool {
 	return *e[i].Offset < *e[j].Offset
 }
 
+// CollaSize returns the collation size for t.
+func CollaSize(t int) int {
+	var size int
+	switch t {
+	case 2:
+		size = 1
+	case 3, 7:
+		size = 2
+	case 4, 5:
+		size = 4
+	case 6:
+		size = 3
+	}
+	return size
+}
+
 func writeTo(dst []byte, val uint64, k int) []byte {
 	src := mybits.Uint64ToBytes(val, k)
 	tmp := make([]byte, hex.EncodedLen(len(src)))
@@ -64,6 +93,7 @@ func writeTo(dst []byte, val uint64, k int) []byte {
 	return append(dst, tmp...)
 }
 
+// Write serializes a table entry in file.
 func Write(file afero.File, offset int64, fx uint64, x, pos, posOffset *uint64, collated *big.Int, k int) (int, error) {
 	if _, err := file.Seek(offset, io.SeekStart); err != nil {
 		return 0, fmt.Errorf("cannot set file offset at %d: %w", offset, err)
@@ -77,41 +107,43 @@ func Write(file afero.File, offset int64, fx uint64, x, pos, posOffset *uint64, 
 		src = mybits.Uint64ToBytes(*x, k)
 		xDst := make([]byte, hex.EncodedLen(len(src)))
 		hex.Encode(xDst, src)
-		dst = append(dst, ',')
+		dst = append(dst, entryDelimiter)
 		dst = append(dst, xDst...)
 	}
 
 	// Write the pos,offset if we are provided one
 	if pos != nil {
-		dst = append(dst, ',')
-		dst = writeTo(dst, *pos, k)
+		dst = append(dst, entryDelimiter)
+		// Store positions to previous tables, in k+1 bits. This is because we may have
+		// more than 2^k entries in some of the tables, so we need an extra bit.
+		dst = writeTo(dst, *pos, k+1)
 		// posOffset has to be non-nil at this point
-		dst = append(dst, ',')
-		dst = writeTo(dst, *posOffset, 10)
+		dst = append(dst, entryDelimiter)
+		dst = writeTo(dst, *posOffset, posOffsetSize)
 	}
 	// Write the collated value if we are provided one
 	if collated != nil {
 		serialized := collated.Bytes()
 		sDst := make([]byte, hex.EncodedLen(len(serialized)))
 		hex.Encode(sDst, serialized)
-		dst = append(dst, ',')
+		dst = append(dst, entryDelimiter)
 		dst = append(dst, sDst...)
 	}
 
-	dst = append(dst, '\n')
+	dst = append(dst, entriesDelimiter)
 	return file.Write(dst)
 }
 
 func preparePart(part []byte) []byte {
 	// TODO: This is ugly and should be fixed in a different way
-	return bytes.TrimSpace(bytes.TrimRight(part, ","))
+	return bytes.TrimSpace(bytes.TrimRight(part, string(entryDelimiter)))
 }
 
-// read ensures all bytes up to the delimeter will be read.
+// read ensures all bytes up to the delimiter will be read.
 // If more bytes are read, the extra bytes are dropped.
 // If less bytes are read, one more read is performed which
-// should include the next delimeter.
-func read(file afero.File, offset int64, delimeter []byte, entryLen int) (int, []byte, error) {
+// should include the next delimiter.
+func read(file afero.File, offset int64, delimiter []byte, entryLen int) (int, []byte, error) {
 	e := make([]byte, entryLen)
 
 	read, err := file.ReadAt(e, offset)
@@ -119,43 +151,43 @@ func read(file afero.File, offset int64, delimeter []byte, entryLen int) (int, [
 		return read, nil, err
 	}
 
-	delimeterIndex := bytes.Index(e, delimeter)
-	if delimeterIndex == -1 {
-		// If there is no delimeter we need to read more.
+	delimiterIndex := bytes.Index(e, delimiter)
+	if delimiterIndex == -1 {
+		// If there is no delimiter we need to read more.
 		// One more read of entryLen bytes should suffice.
 		additional := make([]byte, entryLen)
 		more, err := file.ReadAt(additional, offset+int64(read))
 		if err != nil {
 			return read + more, nil, err
 		}
-		delimeterIndex = bytes.Index(additional, delimeter)
-		e = append(e, additional[:delimeterIndex+1]...)
+		delimiterIndex = bytes.Index(additional, delimiter)
+		e = append(e, additional[:delimiterIndex+1]...)
 		return len(e), e, nil
 	}
 
-	// if we got a delimeter in our read bytes, it is either in the end
+	// if we got a delimiter in our read bytes, it is either in the end
 	// of the byte slice (normal case), somewhere in between (collated
-	// value is size is not fixed for some reason), or at the start (bad read).
-	read, e = dropDelimeters(file, e, delimeter)
+	// value size is not fixed for some reason), or at the start (bad read).
+	read, e = dropDelimeters(file, e, delimiter)
 	return read, e, nil
 }
 
-func dropDelimeters(file afero.File, e, delimeter []byte) (int, []byte) {
-	delimeterIndex := bytes.Index(e, delimeter)
-	switch delimeterIndex {
+func dropDelimeters(file afero.File, e, delimiter []byte) (int, []byte) {
+	delimiterIndex := bytes.Index(e, delimiter)
+	switch delimiterIndex {
 
 	case 0:
-		e = bytes.TrimLeft(e, string(delimeter))
-		// There may be more than one delimeter as part of this entry...
+		e = bytes.TrimLeft(e, string(delimiter))
+		// There may be more than one delimiter as part of this entry...
 		var read int
-		read, e = dropDelimeters(file, e, delimeter)
+		read, e = dropDelimeters(file, e, delimiter)
 		return read + 1, e
 
 	case len(e):
 		// normal case; do nothing
 
 	default:
-		e = e[:delimeterIndex+1]
+		e = e[:delimiterIndex+1]
 	}
 	return len(e), e
 }
@@ -163,9 +195,9 @@ func dropDelimeters(file afero.File, e, delimeter []byte) (int, []byte) {
 func Read(file afero.File, offset int64, entryLen, k int) (*Entry, int, error) {
 	// HACK: collated values unfortunately can break the assumption
 	// that all entries have fixed length so if our entry contains
-	// a delimeter not at the end of the entry, then we need to drop
+	// a delimiter not at the end of the entry, then we need to drop
 	// what we read up to the newline.
-	read, e, err := read(file, offset, []byte("\n"), entryLen)
+	read, e, err := read(file, offset, []byte{entriesDelimiter}, entryLen)
 	if err != nil {
 		return nil, read, err
 	}
@@ -175,7 +207,7 @@ func Read(file afero.File, offset int64, entryLen, k int) (*Entry, int, error) {
 	}
 
 	var entry *Entry
-	parts := bytes.Split(e, []byte(","))
+	parts := bytes.Split(e, []byte{entryDelimiter})
 
 	switch len(parts) {
 	case 2:
@@ -216,7 +248,7 @@ func Read(file afero.File, offset int64, entryLen, k int) (*Entry, int, error) {
 		if err != nil {
 			return nil, read, fmt.Errorf("cannot decode pos (%s): %w", posBytes, err)
 		}
-		pos := mybits.BytesToUint64(dst, k)
+		pos := mybits.BytesToUint64(dst, k+1)
 
 		posOffsetBytes := preparePart(parts[2])
 		dst = make([]byte, hex.DecodedLen(len(posOffsetBytes)))
@@ -224,7 +256,7 @@ func Read(file afero.File, offset int64, entryLen, k int) (*Entry, int, error) {
 		if err != nil {
 			return nil, read, fmt.Errorf("cannot decode pos offset (%s): %w", posOffsetBytes, err)
 		}
-		posOffset := mybits.BytesToUint64(dst, k)
+		posOffset := mybits.BytesToUint64(dst, posOffsetSize)
 
 		entry = &Entry{Fx: fx, Pos: &pos, Offset: &posOffset}
 
@@ -244,7 +276,7 @@ func Read(file afero.File, offset int64, entryLen, k int) (*Entry, int, error) {
 		if err != nil {
 			return nil, read, fmt.Errorf("cannot decode pos (%s): %w", posBytes, err)
 		}
-		pos := mybits.BytesToUint64(dst, k)
+		pos := mybits.BytesToUint64(dst, k+1)
 
 		posOffsetBytes := preparePart(parts[2])
 		dst = make([]byte, hex.DecodedLen(len(posOffsetBytes)))
@@ -252,7 +284,7 @@ func Read(file afero.File, offset int64, entryLen, k int) (*Entry, int, error) {
 		if err != nil {
 			return nil, read, fmt.Errorf("cannot decode pos offset (%s): %w", posOffsetBytes, err)
 		}
-		posOffset := mybits.BytesToUint64(dst, 10)
+		posOffset := mybits.BytesToUint64(dst, posOffsetSize)
 
 		collatedBytes := preparePart(parts[3])
 		dst = make([]byte, hex.DecodedLen(len(collatedBytes)))
@@ -269,4 +301,22 @@ func Read(file afero.File, offset int64, entryLen, k int) (*Entry, int, error) {
 	}
 
 	return entry, read, nil
+}
+
+// EntrySize returns the expected entry size depending
+// on the space parameter k and the table index t.
+func EntrySize(k, t int) int {
+	kBytes := mybits.ToBytes(k)
+	switch t {
+	case 1:
+		// fx + entryDelimiter + x + entriesDelimiter
+		return kBytes + 1 + kBytes + 1
+	case 2, 3, 4, 5, 6:
+		// fx + entryDelimiter + pos + entryDelimiter + posOffset + entryDelimiter + collated + entriesDelimiter
+		return kBytes + 1 + mybits.ToBytes(k+1) + 1 + posOffsetSize + 1 + mybits.ToBytes(CollaSize(t)*k) + 1
+	case 7:
+		// fx + entryDelimiter + pos + entryDelimiter + posOffset + entriesDelimiter
+		return kBytes + 1 + mybits.ToBytes(k+1) + 1 + posOffsetSize + 1
+	}
+	return 0
 }

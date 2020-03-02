@@ -5,6 +5,7 @@ import (
 	"crypto/cipher"
 	"math/big"
 
+	"github.com/kargakis/gochia/pkg/serialize"
 	"github.com/kargakis/gochia/pkg/utils"
 )
 
@@ -23,12 +24,8 @@ func At(x, y *big.Int, k uint64, t int, c cipher.Block) (uint64, error) {
 	yHigh := new(big.Int)
 	yHigh.DivMod(y, param, yLow)
 
-	// setup size
-	collaSize, err := CollaSize(t)
-	if err != nil {
-		return 0, err
-	}
-	size := 2 * int(k) * *collaSize
+	// estimate collation size
+	size := 2 * int(k) * serialize.CollaSize(t)
 
 	// main logic
 	var cipherText [aes.BlockSize]byte

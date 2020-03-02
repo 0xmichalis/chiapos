@@ -26,12 +26,13 @@ func bucketIndex(entry uint64, k int) string {
 // OnDisk performs sorting on the given file on disk, given begin which
 // is the start of the data in the file in need of sorting, and availableMemory
 // is the available memory in which sorting can be done.
-func OnDisk(file afero.File, fs afero.Fs, begin, maxSize, availableMemory, entryLen, k, t int) error {
+func OnDisk(file afero.File, fs afero.Fs, begin, tableSize, availableMemory, k, t int) error {
+	entryLen := serialize.EntrySize(k, t)
 	// TODO: FIXME - note that we need to take into account the
 	// memory that will be used by loading the unsorted buckets,
 	// the sorted buckets that are currently in memory, plus any
 	// extra memory consumed by SortInMemory.
-	if availableMemory > maxSize-begin {
+	if availableMemory > tableSize {
 		// if we can sort in memory, do that
 		fmt.Println("Sorting in memory...")
 		return sortInMem(file, begin, entryLen, k, t)

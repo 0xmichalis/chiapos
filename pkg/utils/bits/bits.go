@@ -105,17 +105,23 @@ func (be bigEndian) PutUint64(b []byte, v uint64) {
 	}
 }
 
+// ToBytes returns the minimum bytes necessary
+// to store a k-bit number.
+func ToBytes(k int) int {
+	bSize := k / 8
+	if k%8 != 0 {
+		bSize++
+	}
+	return bSize
+}
+
 // Uint64ToBytes converts an unsigned 64-bit integer
 // to a byte slice. The returned order used is big endian,
 // similar to the big.Int api. Even though a 64-bits integer
 // is provided, only enough bytes necessary to represent the
 // integer are serialized.
 func Uint64ToBytes(n uint64, k int) []byte {
-	bSize := k / 8
-	if k%8 != 0 {
-		bSize++
-	}
-	b := make([]byte, bSize)
+	b := make([]byte, ToBytes(k))
 	bigEndian{Len: k}.PutUint64(b, n)
 	return b
 }
