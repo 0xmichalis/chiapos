@@ -20,14 +20,14 @@ func Collate(t int, k uint64, l, r *big.Int) (*big.Int, error) {
 
 	case 5:
 		if l.BitLen()%4 != 0 {
-			return nil, fmt.Errorf("invalid bit length for output: expected bit_len%%4==0")
+			return nil, fmt.Errorf("invalid bit length for output %d, expected bit_len%%4==0", l.BitLen())
 		}
 		l.Xor(l, r)
 		return utils.Trunc(l, 0, uint64(l.BitLen()*3/4), k), nil
 
 	case 6:
 		if l.BitLen()%3 != 0 {
-			return nil, fmt.Errorf("invalid bit length for output: expected bit_len%%3==0")
+			return nil, fmt.Errorf("invalid bit length for output %d, expected bit_len%%3==0", l.BitLen())
 		}
 		l.Xor(l, r)
 		return utils.Trunc(l, 0, uint64(l.BitLen()*2/3), k), nil

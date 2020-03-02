@@ -168,11 +168,11 @@ func read(file afero.File, offset int64, delimiter []byte, entryLen int) (int, [
 	// if we got a delimiter in our read bytes, it is either in the end
 	// of the byte slice (normal case), somewhere in between (collated
 	// value size is not fixed for some reason), or at the start (bad read).
-	read, e = dropDelimeters(file, e, delimiter)
+	read, e = dropDelimiters(file, e, delimiter)
 	return read, e, nil
 }
 
-func dropDelimeters(file afero.File, e, delimiter []byte) (int, []byte) {
+func dropDelimiters(file afero.File, e, delimiter []byte) (int, []byte) {
 	delimiterIndex := bytes.Index(e, delimiter)
 	switch delimiterIndex {
 
@@ -180,7 +180,7 @@ func dropDelimeters(file afero.File, e, delimiter []byte) (int, []byte) {
 		e = bytes.TrimLeft(e, string(delimiter))
 		// There may be more than one delimiter as part of this entry...
 		var read int
-		read, e = dropDelimeters(file, e, delimiter)
+		read, e = dropDelimiters(file, e, delimiter)
 		return read + 1, e
 
 	case len(e):
