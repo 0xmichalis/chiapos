@@ -192,10 +192,12 @@ func WriteTable(file afero.File, k, t, previousStart, currentStart, entryLen int
 			if len(leftBucket) > 0 && len(rightBucket) > 0 {
 				// We have finished adding to both buckets, now we need to compare them.
 				// For any matches, we are going to calculate outputs for the next table.
-				entries, wrote, err = WriteMatches(file, fx, leftBucket, rightBucket, currentStart, t, k)
+				wroteEntries, wroteBytes, err := WriteMatches(file, fx, leftBucket, rightBucket, currentStart+wrote, t, k)
 				if err != nil {
 					return wrote, fmt.Errorf("cannot write matches: %w", err)
 				}
+				entries += wroteEntries
+				wrote += wroteBytes
 			}
 			if leftBucketID == bucketID+2 {
 				// Keep the right bucket as the new left bucket
