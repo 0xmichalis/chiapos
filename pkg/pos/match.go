@@ -4,6 +4,8 @@ import (
 	"math"
 	"math/big"
 
+	"github.com/spf13/afero"
+
 	"github.com/kargakis/gochia/pkg/parameters"
 	"github.com/kargakis/gochia/pkg/serialize"
 )
@@ -41,10 +43,10 @@ type Match struct {
 var rightBids = [parameters.ParamC][]uint64{}
 var rightPositions = [parameters.ParamC][]int{}
 
-// FindMatches compares the two buckets and returns any matches.
-// Carried over from the reference implementation since the naive
-// approach is much slower.
-func FindMatches(left, right []*serialize.Entry) []Match {
+// WriteMatches compares the two buckets read from table t-1 and writes
+// any matches in table t. The matching algorithm is carried over from
+// the reference implementation since the naive approach is much slower.
+func WriteMatches(file afero.File, fx *Fx, left, right []*serialize.Entry, currentStart, t, k int) (int, int, error) {
 	for i := 0; i < parameters.ParamC; i++ {
 		rightBids[i] = nil
 		rightPositions[i] = nil
@@ -58,7 +60,7 @@ func FindMatches(left, right []*serialize.Entry) []Match {
 		rightPositions[rightFx] = append(rightPositions[rightFx], i)
 	}
 
-	var matches []Match
+	var entries, wrote int
 	for leftIndex := range left {
 		leftBid := (left[leftIndex].Fx % parameters.ParamBC) / parameters.ParamC
 		leftCid := left[leftIndex].Fx % parameters.ParamC
@@ -94,19 +96,31 @@ func FindMatches(left, right []*serialize.Entry) []Match {
 						} else if re.Collated != nil {
 							rightMetadata = re.Collated
 						}
-						matches = append(matches, Match{
-							Left:          le.Fx,
-							Right:         re.Fx,
-							LeftPosition:  uint64(le.Index),
-							Offset:        uint64(re.Index - le.Index),
-							LeftMetadata:  leftMetadata,
-							RightMetadata: rightMetadata,
-						})
+
+						f, err := fx.Calculate(t, le.Fx, leftMetadata, rightMetadata)
+						if err != nil {
+							return entries, wrote, err
+						}
+						// This is the collated output stored next to the entry - useful
+						// for generating outputs for the next table.
+						collated, err := Collate(t, uint64(k), leftMetadata, rightMetadata)
+						if err != nil {
+							return entries, wrote, err
+						}
+						// Now write the new output in the next table.
+						index := uint64(le.Index)
+						offset := uint64(re.Index - le.Index)
+						w, err := serialize.Write(file, int64(currentStart+wrote), f, nil, &index, &offset, collated, k)
+						if err != nil {
+							return entries, wrote, err
+						}
+						entries++
+						wrote += w
 					}
 				}
 			}
 		}
 	}
 
-	return matches
+	return entries, wrote, nil
 }

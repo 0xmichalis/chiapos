@@ -192,24 +192,9 @@ func WriteTable(file afero.File, k, t, previousStart, currentStart, entryLen int
 			if len(leftBucket) > 0 && len(rightBucket) > 0 {
 				// We have finished adding to both buckets, now we need to compare them.
 				// For any matches, we are going to calculate outputs for the next table.
-				for _, m := range FindMatches(leftBucket, rightBucket) {
-					f, err := fx.Calculate(t, m.Left, m.LeftMetadata, m.RightMetadata)
-					if err != nil {
-						return wrote, err
-					}
-					// This is the collated output stored next to the entry - useful
-					// for generating outputs for the next table.
-					collated, err := Collate(t, uint64(k), m.LeftMetadata, m.RightMetadata)
-					if err != nil {
-						return wrote, err
-					}
-					// Now write the new output in the next table.
-					w, err := serialize.Write(file, int64(currentStart+wrote), f, nil, &m.LeftPosition, &m.Offset, collated, k)
-					if err != nil {
-						return wrote + w, err
-					}
-					wrote += w
-					entries++
+				entries, wrote, err = WriteMatches(file, fx, leftBucket, rightBucket, currentStart, t, k)
+				if err != nil {
+					return wrote, fmt.Errorf("cannot write matches: %w", err)
 				}
 			}
 			if leftBucketID == bucketID+2 {
