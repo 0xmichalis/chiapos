@@ -4,10 +4,10 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"fmt"
-	"math/big"
 
 	"github.com/kargakis/gochia/pkg/parameters"
 	"github.com/kargakis/gochia/pkg/utils"
+	"github.com/kargakis/gochia/pkg/utils/bits"
 )
 
 const (
@@ -41,30 +41,42 @@ func NewF1(k int, key []byte) (*F1, error) {
 	return f1, nil
 }
 
-// Calculate expects an input of 2^k bits.
-// The result should be of 2^(k+kExtraBits) bits.
-func (f *F1) Calculate(x uint64) uint64 {
-	q, r := new(big.Int).DivMod(new(big.Int).SetUint64(x*f.k), big.NewInt(kBlockSizeBits), new(big.Int))
-	// fmt.Printf("q=%d, r=%d, x=%d, k=%d\n", q.Uint64(), r.Uint64(), x, f.k)
+// Calculate accepts a number and calculates a batch of
+// 2^(k+kExtraBits)-bit outputs.
+func (f *F1) Calculate(x uint64) [][]byte {
+	counter := (x * f.k) / kBlockSizeBits
 
-	var qCipher [16]byte
-	data := utils.FillToBlock(q.Bytes())
-	f.key.Encrypt(qCipher[:], data)
-	res := new(big.Int).SetBytes(qCipher[:])
-
-	if r.Uint64()+f.k <= kBlockSizeBits {
-		res = utils.Trunc(res, r.Uint64(), r.Uint64()+f.k, kBlockSizeBits)
-	} else {
-		part1 := utils.Trunc(res, r.Uint64(), kBlockSizeBits, kBlockSizeBits)
-		var q1Cipher [16]byte
-		data := utils.FillToBlock(q.Add(q, big.NewInt(1)).Bytes())
-		f.key.Encrypt(q1Cipher[:], data)
-		part2 := new(big.Int).SetBytes(q1Cipher[:])
-		part2 = utils.Trunc(part2, 0, r.Uint64()+f.k-kBlockSizeBits, kBlockSizeBits)
-		res = utils.Concat(uint64(part2.BitLen()), part1.Uint64(), part2.Uint64())
+	cipherBytes := bits.ToBytes(int(f.k * kBlockSizeBits))
+	ciphertext := make([]byte, cipherBytes)
+	var index, start, end int
+	for cipherBytes > end {
+		counterBytes := bits.Uint64ToBytes(counter, int(f.k))
+		start = index * aes.BlockSize % (cipherBytes + 1)
+		end = ((index + 1) * aes.BlockSize) % (cipherBytes + 1)
+		f.key.Encrypt(ciphertext[start:end], utils.FillToBlock(counterBytes))
+		counter++
+		index++
 	}
 
-	f1x := utils.ConcatExtended(res.Uint64(), x)
-	// fmt.Printf("Calculated f1(x)=%d for x=%d\n", f1x, x)
-	return f1x
+	var outputs [][]byte
+	kBytes := bits.ToBytes(int(f.k))
+	needsTrunc := kBytes != int(f.k)*8
+	tmp := make([]byte, kBytes)
+	// slice the ciphertext properly to get back all the f(x)s
+	for i, c := range ciphertext {
+		if (i+1)%kBytes != 0 {
+			tmp[i%kBytes] = c
+		} else {
+			if needsTrunc {
+				tmp[i%kBytes] = c << (8 - (f.k % 8))
+			} else {
+				tmp[i%kBytes] = c
+			}
+			outputs = append(outputs, tmp)
+			// clean up buffer
+			tmp = make([]byte, kBytes)
+		}
+	}
+
+	return outputs
 }
