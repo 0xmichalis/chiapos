@@ -9,6 +9,7 @@ import (
 
 	"github.com/kargakis/chiapos/pkg/parameters"
 	"github.com/kargakis/chiapos/pkg/serialize"
+	"github.com/kargakis/chiapos/pkg/utils"
 )
 
 // Checkpoint reads the last table in the plot and creates a new
@@ -49,11 +50,16 @@ func Checkpoint(file afero.File, k int) (int, error) {
 		read += bytesRead
 	}
 
+	eotBytes, err := WriteEOT(file, entryLen)
+	if err != nil {
+		return wrote + eotBytes, err
+	}
+
 	// TODO: Set a different index than 8, change index to a string
 	if err := updateLastTableIndexAndPositions(file, 8, end+1, end+1+wrote); err != nil {
-		return wrote, err
+		return wrote + eotBytes, err
 	}
-	fmt.Println("Finished checkpointing...")
+	fmt.Printf("Finished checkpointing (wrote %s)\n", utils.PrettySize(wrote))
 
-	return wrote, nil
+	return wrote + eotBytes, nil
 }
