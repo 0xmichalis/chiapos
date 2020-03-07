@@ -19,9 +19,9 @@ func Collate(t, k int, l, r *big.Int) (*big.Int, error) {
 		return l.Xor(l, r), nil
 
 	case 5:
-		// TODO: When bytes are serialized to a primitive such as int or big.Int
-		// the most significant bits can be empty so less then the expected size
-		// which is kind of expected when dealing with random numbers.
+		// TODO: When bytes are deserialized to a primitive such as int or big.Int
+		// a couple of the most significant bits may be empty so less then the expected
+		// size which is kind of expected when dealing with random numbers.
 		//if l.BitLen()%4 != 0 {
 		//	return nil, fmt.Errorf("invalid bit length for output %d, expected bit_len%%4==0", l.BitLen())
 		//}
@@ -29,9 +29,9 @@ func Collate(t, k int, l, r *big.Int) (*big.Int, error) {
 		return utils.Trunc(l, 0, l.BitLen()*3/4, l.BitLen()), nil
 
 	case 6:
-		// TODO: When bytes are serialized to a primitive such as int or big.Int
-		// the most significant bits can be empty so less then the expected size.
-		// which is kind of expected when dealing with random numbers.
+		// TODO: When bytes are deserialized to a primitive such as int or big.Int
+		// a couple of the most significant bits may be empty so less then the expected
+		// size which is kind of expected when dealing with random numbers.
 		//if l.BitLen()%3 != 0 {
 		//	return nil, fmt.Errorf("invalid bit length for output %d, expected bit_len%%3==0", l.BitLen())
 		//}
