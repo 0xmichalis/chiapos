@@ -8,10 +8,10 @@ if [[ -n "${FILES}" ]]; then
     exit 1
 fi
 
-FILES=$(goimports -e -l -local=github.com/kargakis/gochia cmd pkg)
+FILES=$(goimports -e -l -local=github.com/kargakis/chiapos cmd pkg)
 
 if [[ -n "${FILES}" ]]; then
-    echo You have go import errors in the below files, please run "goimports -e -w -local=github.com/kargakis/gochia cmd pkg"
+    echo You have go import errors in the below files, please run "goimports -e -w -local=github.com/kargakis/chiapos cmd pkg"
     echo ${FILES}
     exit 1
 fi

@@ -5,7 +5,7 @@ import (
 	"math/bits"
 	"testing"
 
-	mybits "github.com/kargakis/gochia/pkg/utils/bits"
+	mybits "github.com/kargakis/chiapos/pkg/utils/bits"
 )
 
 func TestUint64ToBytes(t *testing.T) {

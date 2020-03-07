@@ -3,7 +3,7 @@ package pos
 import (
 	"math/big"
 
-	"github.com/kargakis/gochia/pkg/utils"
+	"github.com/kargakis/chiapos/pkg/utils"
 )
 
 // Collate collates left and right inputs into outputs for the next table.

@@ -8,8 +8,8 @@ import (
 
 	"github.com/spf13/afero"
 
-	"github.com/kargakis/gochia/pkg/serialize"
-	mybits "github.com/kargakis/gochia/pkg/utils/bits"
+	"github.com/kargakis/chiapos/pkg/serialize"
+	mybits "github.com/kargakis/chiapos/pkg/utils/bits"
 )
 
 var buckets = make(map[string][]*serialize.Entry)

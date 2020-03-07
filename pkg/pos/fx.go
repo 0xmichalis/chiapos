@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/kargakis/gochia/pkg/parameters"
-	"github.com/kargakis/gochia/pkg/rraes"
+	"github.com/kargakis/chiapos/pkg/parameters"
+	"github.com/kargakis/chiapos/pkg/rraes"
 )
 
 type Fx struct {

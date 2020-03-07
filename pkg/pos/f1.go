@@ -5,9 +5,9 @@ import (
 	"crypto/cipher"
 	"fmt"
 
-	"github.com/kargakis/gochia/pkg/parameters"
-	"github.com/kargakis/gochia/pkg/utils"
-	"github.com/kargakis/gochia/pkg/utils/bits"
+	"github.com/kargakis/chiapos/pkg/parameters"
+	"github.com/kargakis/chiapos/pkg/utils"
+	"github.com/kargakis/chiapos/pkg/utils/bits"
 )
 
 const (

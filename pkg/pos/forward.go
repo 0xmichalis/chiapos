@@ -9,11 +9,11 @@ import (
 
 	"github.com/spf13/afero"
 
-	"github.com/kargakis/gochia/pkg/parameters"
-	"github.com/kargakis/gochia/pkg/serialize"
-	"github.com/kargakis/gochia/pkg/utils"
-	"github.com/kargakis/gochia/pkg/utils/bits"
-	"github.com/kargakis/gochia/pkg/utils/sort"
+	"github.com/kargakis/chiapos/pkg/parameters"
+	"github.com/kargakis/chiapos/pkg/serialize"
+	"github.com/kargakis/chiapos/pkg/utils"
+	"github.com/kargakis/chiapos/pkg/utils/bits"
+	"github.com/kargakis/chiapos/pkg/utils/sort"
 )
 
 // ForwardPropagate is Phase 1 of the plotter. During this phase, all of the tables,

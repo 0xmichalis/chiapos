@@ -10,8 +10,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/kargakis/gochia/pkg/pos"
-	"github.com/kargakis/gochia/pkg/utils"
+	"github.com/kargakis/chiapos/pkg/pos"
+	"github.com/kargakis/chiapos/pkg/utils"
 )
 
 var (

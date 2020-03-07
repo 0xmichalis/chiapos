@@ -6,8 +6,8 @@ import (
 
 	"github.com/spf13/afero"
 
-	"github.com/kargakis/gochia/pkg/parameters"
-	"github.com/kargakis/gochia/pkg/serialize"
+	"github.com/kargakis/chiapos/pkg/parameters"
+	"github.com/kargakis/chiapos/pkg/serialize"
 )
 
 func init() {

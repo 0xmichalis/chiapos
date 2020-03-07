@@ -10,7 +10,7 @@ import (
 
 	"github.com/spf13/afero"
 
-	mybits "github.com/kargakis/gochia/pkg/utils/bits"
+	mybits "github.com/kargakis/chiapos/pkg/utils/bits"
 )
 
 const (

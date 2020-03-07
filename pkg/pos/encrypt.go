@@ -5,8 +5,8 @@ import (
 	"crypto/cipher"
 	"math/big"
 
-	"github.com/kargakis/gochia/pkg/serialize"
-	"github.com/kargakis/gochia/pkg/utils"
+	"github.com/kargakis/chiapos/pkg/serialize"
+	"github.com/kargakis/chiapos/pkg/utils"
 )
 
 // At is a high-level hash function that calls AES on its inputs.
