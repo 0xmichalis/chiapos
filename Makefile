@@ -13,11 +13,12 @@ build: build-binaries
 
 build-binaries:
 	@go build -o $(PWD)/bin/plotter $(PWD)/cmd/plotter
+	@go build -o $(PWD)/bin/prover  $(PWD)/cmd/prover
 .PHONY: build-binaries
 
 clean:
 	@rm -rf $(PWD)/bin
-	@rm -rf plot.*
+	@rm -rf plot.dat
 .PHONY: clean
 
 test:
