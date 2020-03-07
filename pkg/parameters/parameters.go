@@ -13,8 +13,7 @@ const (
 	ParamBC = ParamB * ParamC
 
 	// Must be set high enough to prevent attacks of fast plotting
-	// TODO: Should be set to 33
-	KMinPlotSize = 15
+	KMinPlotSize = 19
 
 	// Set at 59 to allow easy use of 64 bit integers
 	KMaxPlotSize = 59
