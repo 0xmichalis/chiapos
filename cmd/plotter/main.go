@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/kargakis/gochia/pkg/pos"
+	"github.com/kargakis/gochia/pkg/utils"
 )
 
 var (
@@ -76,9 +77,10 @@ func main() {
 
 	fmt.Printf("Generating plot at %s with k=%d\n", *plotPath, *k)
 	plotStart := time.Now()
-	if err := pos.WritePlotFile(*plotPath, *k, *availMem, key[:], *retry); err != nil {
+	wrote, err := pos.PlotDisk(*plotPath, *k, *availMem, key[:], *retry)
+	if err != nil {
 		fmt.Printf("cannot write plot: %v\n", err)
 		os.Exit(1)
 	}
-	fmt.Printf("Plotting: OK (%v)\n", time.Since(plotStart))
+	fmt.Printf("Plotting: OK (Wrote %v in %v)\n", utils.PrettySize(wrote), time.Since(plotStart))
 }

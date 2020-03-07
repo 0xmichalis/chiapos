@@ -16,13 +16,9 @@ import (
 	"github.com/kargakis/gochia/pkg/utils/sort"
 )
 
-// This is Phase 1, or forward propagation. During this phase, all of the 7 tables,
-// and f functions, are evaluated. The result is an intermediate plot file, that is
-// several times larger than what the final file will be, but that has all of the
-// proofs of space in it. First, F1 is computed, which is special since it uses
-// AES256, and each encryption provides multiple output values. Then, the rest of the
-// f functions are computed, and a sort on disk happens for each table.
-func WritePlotFile(filename string, k, availableMemory int, id []byte, retry bool) error {
+// PlotDisk is the main function that handles executing all the different
+// steps required to plot a disk.
+func PlotDisk(filename string, k, availableMemory int, id []byte, retry bool) (int, error) {
 	fs := afero.NewOsFs()
 
 	var file afero.File
@@ -33,18 +29,36 @@ func WritePlotFile(filename string, k, availableMemory int, id []byte, retry boo
 		file, err = fs.Create(filename)
 	}
 	if err != nil {
-		return err
+		return 0, err
 	}
 
+	// Run forward propagation
+	wrote, err := ForwardPropagate(fs, file, k, availableMemory, id, retry)
+	if err != nil {
+		return wrote, err
+	}
+
+	return wrote, nil
+}
+
+// ForwardPropagate is Phase 1 of the plotter. During this phase, all of the tables,
+// and f functions are evaluated. The result is an intermediate plot file, that is
+// several times larger than what the final file will be, but that has all of the
+// proofs of space in it. First, F1 is computed, which is special since it uses
+// AES256, and each encryption provides multiple output values. Then, the rest of the
+// f functions are computed, and a sort on disk happens for each table.
+func ForwardPropagate(fs afero.Fs, file afero.File, k, availableMemory int, id []byte, retry bool) (int, error) {
 	// Figure out where the previous plotter got interrupted
 	var tableIndex, tableStart, tableEnd, headerLen, wrote int
+	var err error
+
 	if retry {
 		tableIndex, tableStart, tableEnd, err = getLastTableIndexAndPositions(file)
 	} else {
 		headerLen, err = WriteHeader(file, k, id)
 	}
 	if err != nil {
-		return err
+		return wrote, err
 	}
 
 	start := time.Now()
@@ -52,21 +66,21 @@ func WritePlotFile(filename string, k, availableMemory int, id []byte, retry boo
 		fmt.Println("Computing table 1...")
 		wrote, err = WriteFirstTable(file, k, headerLen+1, id)
 		if err != nil {
-			return err
+			return wrote, err
 		}
 		fmt.Println("Sorting table 1...")
 		if err := sort.OnDisk(file, fs, headerLen+1, wrote+headerLen+1, availableMemory, k, 1); err != nil {
-			return err
+			return wrote, err
 		}
 		if err := updateLastTableIndexAndPositions(file, 1, headerLen+1, wrote+headerLen+1); err != nil {
-			return err
+			return wrote, err
 		}
 		fmt.Printf("F1 calculations finished in %v (wrote %s)\n", time.Since(start), utils.PrettySize(wrote))
 	}
 
 	fx, err := NewFx(k, id)
 	if err != nil {
-		return err
+		return wrote, err
 	}
 
 	var previousStart, currentStart int
@@ -88,23 +102,24 @@ func WritePlotFile(filename string, k, availableMemory int, id []byte, retry boo
 		entryLen := serialize.EntrySize(k, t)
 		tWrote, err := WriteTable(file, k, t, previousStart, currentStart, entryLen, fx)
 		if err != nil {
-			return err
+			return tWrote + wrote, err
 		}
+		wrote += tWrote
 		previousStart = currentStart
 		currentStart += tWrote + 1
 
 		fmt.Printf("Sorting table %d...\n", t)
 		// Remove EOT from entries and currentStart
 		if err := sort.OnDisk(file, fs, previousStart, tWrote, availableMemory, k, t); err != nil {
-			return err
+			return wrote, err
 		}
 		if err := updateLastTableIndexAndPositions(file, t, previousStart, previousStart+tWrote); err != nil {
-			return err
+			return wrote, err
 		}
 		fmt.Printf("F%d calculations finished in %v (wrote %s)\n", t, time.Since(start), utils.PrettySize(tWrote))
 	}
 
-	return nil
+	return wrote, nil
 }
 
 func WriteFirstTable(file afero.File, k, start int, id []byte) (int, error) {
@@ -131,25 +146,18 @@ func WriteFirstTable(file afero.File, k, start int, id []byte) (int, error) {
 	}
 
 	eotBytes, err := WriteEOT(file, wrote/int(maxNumber))
-	if err != nil {
-		return wrote + eotBytes, err
-	}
-	fmt.Printf("Wrote %d entries (size: %s)\n", maxNumber, utils.PrettySize(wrote))
-	return wrote + eotBytes, nil
+	return wrote + eotBytes, err
 }
 
 // WriteEOT writes the last entry in the table that should signal
 // that we just finished reading the table.
 func WriteEOT(file afero.File, entryLen int) (int, error) {
 	eotEntry := []byte(serialize.EOT)
-	// TODO: newlines are merely added for readability of the plot
-	// but readability should not be a goal so remove them eventually
-	// and follow the format used in the reference implementation.
-	newLine := []byte("\n")
-	// entries are supposed to be larger than EOT so we should
-	// always prepend bytes here.
-	rest := make([]byte, entryLen-len(eotEntry)-len(newLine))
-	return file.Write(append(eotEntry, append(rest, newLine...)...))
+	delimiter := []byte{serialize.EntriesDelimiter}
+	// prepend the same amount of bytes an entry has to the
+	// delimiter. TODO: Stop doing this?
+	rest := make([]byte, entryLen-len(eotEntry)-len(delimiter))
+	return file.Write(append(eotEntry, append(rest, delimiter...)...))
 }
 
 // WriteTable reads the t-1'th table from the file and writes the t'th table.
@@ -226,15 +234,7 @@ func WriteTable(file afero.File, k, t, previousStart, currentStart, entryLen int
 	}
 
 	eotBytes, err := WriteEOT(file, wrote/entries)
-	if err != nil {
-		return wrote + eotBytes, err
-	}
-	// we don't really care about including EOT as an entry in the log
-	// and the only reason it is returned as part of entries is to allow
-	// callers to estimate the average entry size.
-	fmt.Printf("Wrote %d entries (size: %s)\n", entries, utils.PrettySize(wrote))
-
-	return wrote + eotBytes, nil
+	return wrote + eotBytes, err
 }
 
 var plotHeader = []byte("Proof of Space Plot")

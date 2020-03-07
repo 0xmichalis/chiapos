@@ -34,10 +34,8 @@ func OnDisk(file afero.File, fs afero.Fs, begin, tableSize, availableMemory, k, 
 	// extra memory consumed by SortInMemory.
 	if availableMemory > tableSize {
 		// if we can sort in memory, do that
-		fmt.Println("Sorting in memory...")
 		return sortInMem(file, begin, entryLen, k, t)
 	}
-	fmt.Println("Sorting on disk...")
 
 	// Sort plot into buckets
 	var read, write int

@@ -21,7 +21,7 @@ const (
 	posOffsetSize = 10
 
 	// entriesDelimiter is a delimiter used to separate entries
-	entriesDelimiter = '\n'
+	EntriesDelimiter = '\n'
 
 	// entryDelimiter is a delimiter used to separate different
 	// parts of a single entry
@@ -130,7 +130,7 @@ func Write(file afero.File, offset int64, fx uint64, x, pos, posOffset *uint64, 
 		dst = append(dst, sDst...)
 	}
 
-	dst = append(dst, entriesDelimiter)
+	dst = append(dst, EntriesDelimiter)
 	return file.Write(dst)
 }
 
@@ -197,7 +197,7 @@ func Read(file afero.File, offset int64, entryLen, k int) (*Entry, int, error) {
 	// that all entries have fixed length so if our entry contains
 	// a delimiter not at the end of the entry, then we need to drop
 	// what we read up to the newline.
-	read, e, err := read(file, offset, []byte{entriesDelimiter}, entryLen)
+	read, e, err := read(file, offset, []byte{EntriesDelimiter}, entryLen)
 	if err != nil {
 		return nil, read, err
 	}
