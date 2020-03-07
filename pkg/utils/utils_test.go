@@ -42,7 +42,7 @@ func TestTrunc(t *testing.T) {
 	tests := []struct {
 		name    string
 		x       *big.Int
-		a, b, k uint64
+		a, b, k int
 		want    *big.Int
 	}{
 		{

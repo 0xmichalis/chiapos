@@ -25,7 +25,7 @@ func At(x, y *big.Int, k, t int, c cipher.Block) (uint64, error) {
 	yHigh.DivMod(y, param, yLow)
 
 	// estimate collation size
-	size := 2 * int(k) * serialize.CollaSize(t)
+	size := 2 * k * serialize.CollaSize(t)
 
 	// main logic
 	var cipherText [aes.BlockSize]byte
@@ -70,6 +70,6 @@ func At(x, y *big.Int, k, t int, c cipher.Block) (uint64, error) {
 
 	// need to return the most significant k+paramEXT bits
 	res := new(big.Int).SetBytes(cipherText[:])
-	r := utils.Trunc(res, 0, k+5, k).Uint64()
+	r := utils.Trunc(res, 0, k+5, res.BitLen()).Uint64()
 	return r, nil
 }

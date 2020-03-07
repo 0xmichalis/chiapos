@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"math/big"
 	"runtime"
-
-	"github.com/kargakis/gochia/pkg/parameters"
 )
 
 // Concat performs zero-padded concatenation of the provided xs.
@@ -38,14 +36,6 @@ func ConcatBig(k int, xs ...*big.Int) *big.Int {
 		res.Lsh(res, uint(k)).Add(res, x)
 	}
 	return res
-}
-
-// ConcatExtended shifts x paramEXT bits to the left, then adds
-// y % paramM to it.
-func ConcatExtended(x, y uint64) uint64 {
-	tmp := x << parameters.ParamEXT
-	tmp += y % parameters.ParamM
-	return tmp
 }
 
 // Trunc returns the b most significant of x. If a is non-zero then the ath to (b-1)th
