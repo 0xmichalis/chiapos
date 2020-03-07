@@ -64,7 +64,7 @@ func WritePlotFile(filename string, k, availableMemory int, id []byte, retry boo
 		fmt.Printf("F1 calculations finished in %v (wrote %s)\n", time.Since(start), utils.PrettySize(wrote))
 	}
 
-	fx, err := NewFx(uint64(k), id)
+	fx, err := NewFx(k, id)
 	if err != nil {
 		return err
 	}

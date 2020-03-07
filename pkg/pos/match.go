@@ -103,7 +103,7 @@ func WriteMatches(file afero.File, fx *Fx, left, right []*serialize.Entry, curre
 						}
 						// This is the collated output stored next to the entry - useful
 						// for generating outputs for the next table.
-						collated, err := Collate(t, uint64(k), leftMetadata, rightMetadata)
+						collated, err := Collate(t, k, leftMetadata, rightMetadata)
 						if err != nil {
 							return entries, wrote, err
 						}

@@ -10,11 +10,11 @@ import (
 )
 
 type Fx struct {
-	k   uint64
+	k   int
 	key cipher.Block
 }
 
-func NewFx(k uint64, key []byte) (*Fx, error) {
+func NewFx(k int, key []byte) (*Fx, error) {
 	if k < parameters.KMinPlotSize || k > parameters.KMaxPlotSize {
 		return nil, fmt.Errorf("invalid k: %d, valid range: %d - %d", k, parameters.KMinPlotSize, parameters.KMaxPlotSize)
 	}

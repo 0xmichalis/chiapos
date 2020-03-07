@@ -16,7 +16,7 @@ const (
 )
 
 type F1 struct {
-	k   uint64
+	k   int
 	key cipher.Block
 }
 
@@ -26,7 +26,7 @@ func NewF1(k int, key []byte) (*F1, error) {
 	}
 
 	f1 := &F1{
-		k: uint64(k),
+		k: k,
 	}
 
 	aesKey := make([]byte, 32)
@@ -44,13 +44,13 @@ func NewF1(k int, key []byte) (*F1, error) {
 // Calculate accepts a number and calculates a batch of
 // 2^(k+kExtraBits)-bit outputs.
 func (f *F1) Calculate(x uint64) [][]byte {
-	counter := (x * f.k) / kBlockSizeBits
+	counter := (x * uint64(f.k)) / kBlockSizeBits
 
-	cipherBytes := bits.ToBytes(int(f.k * kBlockSizeBits))
+	cipherBytes := bits.ToBytes(f.k * kBlockSizeBits)
 	ciphertext := make([]byte, cipherBytes)
 	var index, start, end int
 	for cipherBytes > end {
-		counterBytes := bits.Uint64ToBytes(counter, int(f.k))
+		counterBytes := bits.Uint64ToBytes(counter, f.k)
 		start = index * aes.BlockSize % (cipherBytes + 1)
 		end = ((index + 1) * aes.BlockSize) % (cipherBytes + 1)
 		f.key.Encrypt(ciphertext[start:end], utils.FillToBlock(counterBytes))
@@ -59,8 +59,8 @@ func (f *F1) Calculate(x uint64) [][]byte {
 	}
 
 	var outputs [][]byte
-	kBytes := bits.ToBytes(int(f.k))
-	needsTrunc := kBytes != int(f.k)*8
+	kBytes := bits.ToBytes(f.k)
+	needsTrunc := kBytes != f.k*8
 	tmp := make([]byte, kBytes)
 	// slice the ciphertext properly to get back all the f(x)s
 	for i, c := range ciphertext {

@@ -26,7 +26,7 @@ func Concat(k uint64, xs ...uint64) *big.Int {
 }
 
 // ConcatBig performs zero-padded concatenation of the provided xs.
-func ConcatBig(k uint64, xs ...*big.Int) *big.Int {
+func ConcatBig(k int, xs ...*big.Int) *big.Int {
 	switch len(xs) {
 	case 0:
 		return big.NewInt(0)
@@ -50,7 +50,7 @@ func ConcatExtended(x, y uint64) uint64 {
 
 // Trunc returns the b most significant of x. If a is non-zero then the ath to (b-1)th
 // bits of x are returned. x belongs to [2^k]
-func Trunc(x *big.Int, a, b, k uint64) *big.Int {
+func Trunc(x *big.Int, a, b, k int) *big.Int {
 	x.Rsh(x, uint(k-b))
 	if a > 0 {
 		least := big.NewInt(1)
