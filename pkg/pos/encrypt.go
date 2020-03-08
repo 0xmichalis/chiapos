@@ -5,6 +5,7 @@ import (
 	"crypto/cipher"
 	"math/big"
 
+	"github.com/kargakis/chiapos/pkg/parameters"
 	"github.com/kargakis/chiapos/pkg/serialize"
 	"github.com/kargakis/chiapos/pkg/utils"
 )
@@ -70,6 +71,6 @@ func At(x, y *big.Int, k, t int, c cipher.Block) (uint64, error) {
 
 	// need to return the most significant k+paramEXT bits
 	res := new(big.Int).SetBytes(cipherText[:])
-	r := utils.Trunc(res, 0, k+5, res.BitLen()).Uint64()
+	r := utils.Trunc(res, 0, k+parameters.ParamEXT, res.BitLen()).Uint64()
 	return r, nil
 }

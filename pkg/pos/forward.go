@@ -110,7 +110,7 @@ func WriteFirstTable(file afero.File, k, start int, id []byte) (int, error) {
 		fxs := f1.Calculate(x)
 		for _, fx := range fxs {
 			// TODO: Avoid the bytes to int to bytes conversion
-			f1x := bits.BytesToUint64(fx, k)
+			f1x := bits.BytesToUint64(fx, k+parameters.ParamEXT)
 			n, err := serialize.Write(file, int64(start+wrote), f1x, &x, nil, nil, nil, k)
 			if err != nil {
 				return wrote + n, err

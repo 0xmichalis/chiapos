@@ -63,6 +63,7 @@ func (f *F1) Calculate(x uint64) [][]byte {
 	needsTrunc := kBytes != f.k*8
 	tmp := make([]byte, kBytes)
 	// slice the ciphertext properly to get back all the f(x)s
+	var xIndex uint64
 	for i, c := range ciphertext {
 		if (i+1)%kBytes != 0 {
 			tmp[i%kBytes] = c
@@ -73,6 +74,9 @@ func (f *F1) Calculate(x uint64) [][]byte {
 				tmp[i%kBytes] = c
 			}
 			outputs = append(outputs, tmp)
+			extended := bits.Uint64ToBytes(x+xIndex%parameters.ParamM, parameters.ParamEXT)
+			outputs[xIndex] = append(outputs[xIndex], extended...)
+			xIndex++
 			// clean up buffer
 			tmp = make([]byte, kBytes)
 		}
