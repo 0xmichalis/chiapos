@@ -113,10 +113,6 @@ func loadTable(file afero.File, start, k int) ([]*serialize.Entry, error) {
 	buf := bufio.NewReader(file)
 
 	for {
-		_, err := buf.ReadBytes(serialize.EntriesDelimiter)
-		if err != nil {
-			return nil, err
-		}
 		entry, err := serialize.ReadCheckpoint(buf, k)
 		if errors.Is(err, serialize.EOTErr) || errors.Is(err, io.EOF) {
 			break
