@@ -12,8 +12,9 @@ build: build-binaries
 .PHONY: build
 
 build-binaries:
-	@go build -o $(PWD)/bin/plotter $(PWD)/cmd/plotter
-	@go build -o $(PWD)/bin/prover  $(PWD)/cmd/prover
+	@go build -o $(PWD)/bin/plotter  $(PWD)/cmd/plotter
+	@go build -o $(PWD)/bin/prover   $(PWD)/cmd/prover
+	@go build -o $(PWD)/bin/verifier $(PWD)/cmd/verifier
 .PHONY: build-binaries
 
 clean:

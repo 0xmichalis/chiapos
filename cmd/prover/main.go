@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/rand"
+	"crypto/sha256"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -25,14 +26,17 @@ func main() {
 			fmt.Printf("Cannot generate random challenge: %v\n", err)
 			os.Exit(1)
 		}
-		fmt.Printf("Using random challenge %s\n", challenge)
+		h := sha256.New()
+		h.Write(challenge)
+		challenge = h.Sum(nil)
+		fmt.Printf("Using random challenge %x\n", challenge)
 		if err := ioutil.WriteFile(".random_challenge", challenge, 0777); err != nil {
 			fmt.Printf("Cannot persist random challenge: %v\n", err)
 			os.Exit(1)
 		}
 	}
 	if len(challenge) != 32 {
-		fmt.Println("Challenge needs to be 256 bits")
+		fmt.Printf("Challenge is %d bytes; needs to be 32\n", len(challenge))
 		os.Exit(1)
 	}
 
