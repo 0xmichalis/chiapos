@@ -41,7 +41,7 @@ func Checkpoint(file afero.File, k int) (int, error) {
 		if count%parameters.ParamC1 == 0 {
 			// Write down the exact position of the checkpointed entry in the plot.
 			pos := uint64(start + read)
-			w, err := serialize.Write(file, int64(end+1+wrote), entry.Fx, &pos, nil, nil, nil, k)
+			w, err := serialize.Write(file, int64(end+1+wrote), entry.Fx, nil, &pos, nil, nil, k)
 			if err != nil {
 				return wrote + w, err
 			}
@@ -55,12 +55,13 @@ func Checkpoint(file afero.File, k int) (int, error) {
 	if err != nil {
 		return wrote + eotBytes, err
 	}
+	wrote += eotBytes
 
 	// TODO: Set a different index than 8, change index to a string
 	if err := updateLastTableIndexAndPositions(file, 8, end+1, end+1+wrote); err != nil {
-		return wrote + eotBytes, err
+		return wrote, err
 	}
 	fmt.Printf("Finished checkpointing (wrote %s)\n", utils.PrettySize(wrote))
 
-	return wrote + eotBytes, nil
+	return wrote, nil
 }

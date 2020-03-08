@@ -1,8 +1,10 @@
 package pos
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
+	"io"
 	"math/big"
 
 	"github.com/spf13/afero"
@@ -20,6 +22,7 @@ func Prove(plotPath string, challenge []byte) ([]uint64, error) {
 	if err != nil {
 		return nil, fmt.Errorf("cannot read plot: %w", err)
 	}
+	defer file.Close()
 
 	k, err := getK(file)
 	if err != nil {
@@ -34,6 +37,7 @@ func Prove(plotPath string, challenge []byte) ([]uint64, error) {
 	}
 
 	// load C1 in memory
+	fmt.Println("Loading C1 table in memory...")
 	entries, err := loadTable(file, start, k)
 	if err != nil {
 		return nil, fmt.Errorf("cannot load table into memory: %w", err)
@@ -49,6 +53,7 @@ func Prove(plotPath string, challenge []byte) ([]uint64, error) {
 	}
 
 	// Find all indices where f7 == target
+	fmt.Printf("Searching for f7 outputs matching the challenge, starting from index %d\n", index)
 	var read int
 	var matches []*serialize.Entry
 	entryLen := serialize.EntrySize(k, 7)
@@ -101,19 +106,24 @@ func getK(file afero.File) (int, error) {
 
 func loadTable(file afero.File, start, k int) ([]*serialize.Entry, error) {
 	var entries []*serialize.Entry
-	var read int
-	// Currently, the format of the C1 table is the same as the first table
-	entryLen := serialize.EntrySize(k, 1)
+
+	if _, err := file.Seek(int64(start), io.SeekStart); err != nil {
+		return nil, err
+	}
+	buf := bufio.NewReader(file)
 
 	for {
-		entry, bytesRead, err := serialize.Read(file, int64(start+read), entryLen, k)
-		if errors.Is(err, serialize.EOTErr) {
+		_, err := buf.ReadBytes(serialize.EntriesDelimiter)
+		if err != nil {
+			return nil, err
+		}
+		entry, err := serialize.ReadCheckpoint(buf, k)
+		if errors.Is(err, serialize.EOTErr) || errors.Is(err, io.EOF) {
 			break
 		}
 		if err != nil {
 			return nil, fmt.Errorf("cannot read entry: %w", err)
 		}
-		read += bytesRead
 		entries = append(entries, entry)
 	}
 
@@ -124,7 +134,7 @@ func getLastSmallerIndex(entries []*serialize.Entry, target uint64) (int, error)
 	var position int
 	for _, e := range entries {
 		if e.Fx < target {
-			position = int(*e.X)
+			position = int(*e.Pos)
 		} else {
 			break
 		}

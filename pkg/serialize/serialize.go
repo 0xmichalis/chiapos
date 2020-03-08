@@ -1,6 +1,7 @@
 package serialize
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/hex"
 	"errors"
@@ -20,6 +21,8 @@ const (
 
 	// size of the position offset in bits
 	posOffsetSize = 10
+
+	posBitSize = 64
 
 	// entriesDelimiter is a delimiter used to separate entries
 	EntriesDelimiter = '\n'
@@ -112,16 +115,17 @@ func Write(file afero.File, offset int64, fx uint64, x, pos, posOffset *uint64, 
 		dst = append(dst, xDst...)
 	}
 
-	// Write the pos,offset if we are provided one
 	if pos != nil {
 		dst = append(dst, entryDelimiter)
 		// Store positions to previous tables, in k+1 bits. This is because we may have
 		// more than 2^k entries in some of the tables, so we need an extra bit.
-		dst = writeTo(dst, *pos, k+1)
-		// posOffset has to be non-nil at this point
+		dst = writeTo(dst, *pos, 64)
+	}
+	if posOffset != nil {
 		dst = append(dst, entryDelimiter)
 		dst = writeTo(dst, *posOffset, posOffsetSize)
 	}
+
 	// Write the collated value if we are provided one
 	if collated != nil {
 		serialized := collated.Bytes()
@@ -136,8 +140,7 @@ func Write(file afero.File, offset int64, fx uint64, x, pos, posOffset *uint64, 
 }
 
 func preparePart(part []byte) []byte {
-	// TODO: This is ugly and should be fixed in a different way
-	return bytes.TrimSpace(bytes.TrimRight(part, string(entryDelimiter)))
+	return bytes.TrimRight(bytes.TrimRight(part, string(EntriesDelimiter)), string(entryDelimiter))
 }
 
 // read ensures all bytes up to the delimiter will be read.
@@ -249,7 +252,7 @@ func Read(file afero.File, offset int64, entryLen, k int) (*Entry, int, error) {
 		if err != nil {
 			return nil, read, fmt.Errorf("cannot decode pos (%s): %w", posBytes, err)
 		}
-		pos := mybits.BytesToUint64(dst, k+1)
+		pos := mybits.BytesToUint64(dst, posBitSize)
 
 		posOffsetBytes := preparePart(parts[2])
 		dst = make([]byte, hex.DecodedLen(len(posOffsetBytes)))
@@ -277,7 +280,7 @@ func Read(file afero.File, offset int64, entryLen, k int) (*Entry, int, error) {
 		if err != nil {
 			return nil, read, fmt.Errorf("cannot decode pos (%s): %w", posBytes, err)
 		}
-		pos := mybits.BytesToUint64(dst, k+1)
+		pos := mybits.BytesToUint64(dst, posBitSize)
 
 		posOffsetBytes := preparePart(parts[2])
 		dst = make([]byte, hex.DecodedLen(len(posOffsetBytes)))
@@ -304,6 +307,38 @@ func Read(file afero.File, offset int64, entryLen, k int) (*Entry, int, error) {
 	return entry, read, nil
 }
 
+func ReadCheckpoint(buf *bufio.Reader, k int) (*Entry, error) {
+	read, err := buf.ReadBytes(EntriesDelimiter)
+	if err != nil {
+		return nil, err
+	}
+	if bytes.Contains(read, []byte(EOT)) {
+		return nil, EOTErr
+	}
+	parts := bytes.Split(read, []byte{entryDelimiter})
+	if len(parts) != 2 {
+		return nil, fmt.Errorf("invalid entry: %s", string(read))
+	}
+
+	fxBytes := preparePart(parts[0])
+	dst := make([]byte, hex.DecodedLen(len(fxBytes)))
+	_, err = hex.Decode(dst, fxBytes)
+	if err != nil {
+		return nil, fmt.Errorf("cannot decode f(x) (%s): %w", fxBytes, err)
+	}
+	fx := mybits.BytesToUint64(dst, k+parameters.ParamEXT)
+
+	posBytes := preparePart(parts[1])
+	dst = make([]byte, hex.DecodedLen(len(posBytes)))
+	_, err = hex.Decode(dst, posBytes)
+	if err != nil {
+		return nil, fmt.Errorf("cannot decode pos (%s): %w", posBytes, err)
+	}
+	pos := mybits.BytesToUint64(dst, posBitSize)
+
+	return &Entry{Fx: fx, Pos: &pos}, nil
+}
+
 // EntrySize returns the expected entry size depending
 // on the space parameter k and the table index t.
 func EntrySize(k, t int) int {
@@ -315,10 +350,10 @@ func EntrySize(k, t int) int {
 		return 2*fxBytes + 1 + 2*xBytes + 1
 	case 2, 3, 4, 5, 6:
 		// fx + entryDelimiter + pos + entryDelimiter + posOffset + entryDelimiter + collated + entriesDelimiter
-		return 2*fxBytes + 1 + 2*mybits.ToBytes(k+1) + 1 + 2*posOffsetSize + 1 + 2*mybits.ToBytes(CollaSize(t)*k) + 1
+		return 2*fxBytes + 1 + 2*mybits.ToBytes(64) + 1 + 2*posOffsetSize + 1 + 2*mybits.ToBytes(CollaSize(t)*k) + 1
 	case 7:
 		// fx + entryDelimiter + pos + entryDelimiter + posOffset + entriesDelimiter
-		return 2*fxBytes + 1 + 2*mybits.ToBytes(k+1) + 1 + 2*posOffsetSize + 1
+		return 2*fxBytes + 1 + 2*mybits.ToBytes(64) + 1 + 2*posOffsetSize + 1
 	}
 	return 0
 }

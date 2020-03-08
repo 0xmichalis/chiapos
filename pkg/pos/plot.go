@@ -21,6 +21,7 @@ func PlotDisk(filename string, k, availableMemory int, id []byte, retry bool) (i
 	if err != nil {
 		return 0, err
 	}
+	defer file.Close()
 
 	// Run forward propagation
 	wrote, err := ForwardPropagate(fs, file, k, availableMemory, id, retry)
