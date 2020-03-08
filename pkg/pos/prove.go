@@ -72,7 +72,7 @@ func Prove(plotPath string, challenge []byte) ([]uint64, error) {
 	}
 
 	if len(matches) == 0 {
-		return nil, fmt.Errorf("no match found; no space proof exists for challenge %s", challenge)
+		return nil, fmt.Errorf("no match found; no space proof exists for challenge %d", target)
 	}
 
 	// TODO: Make this index configurable
@@ -128,6 +128,9 @@ func getLastSmallerIndex(entries []*serialize.Entry, target uint64) (int, error)
 		} else {
 			break
 		}
+	}
+	if position == 0 {
+		return 0, fmt.Errorf("no position found")
 	}
 	return position, nil
 }
