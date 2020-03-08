@@ -312,13 +312,13 @@ func EntrySize(k, t int) int {
 	switch t {
 	case 1:
 		// fx + entryDelimiter + x + entriesDelimiter
-		return fxBytes + 1 + xBytes + 1
+		return 2*fxBytes + 1 + 2*xBytes + 1
 	case 2, 3, 4, 5, 6:
 		// fx + entryDelimiter + pos + entryDelimiter + posOffset + entryDelimiter + collated + entriesDelimiter
-		return fxBytes + 1 + mybits.ToBytes(k+1) + 1 + posOffsetSize + 1 + mybits.ToBytes(CollaSize(t)*k) + 1
+		return 2*fxBytes + 1 + 2*mybits.ToBytes(k+1) + 1 + 2*posOffsetSize + 1 + 2*mybits.ToBytes(CollaSize(t)*k) + 1
 	case 7:
 		// fx + entryDelimiter + pos + entryDelimiter + posOffset + entriesDelimiter
-		return fxBytes + 1 + mybits.ToBytes(k+1) + 1 + posOffsetSize + 1
+		return 2*fxBytes + 1 + 2*mybits.ToBytes(k+1) + 1 + 2*posOffsetSize + 1
 	}
 	return 0
 }
