@@ -17,12 +17,28 @@ make build
 
 ## Run
 
-Plot your disk with:
+Create a seed at `.seed` and plot your disk with:
 ```
-./bin/plotter
+./bin/plotter -key .seed
+```
+The seed is optional and if none is provided, the plotter will generate its own but using our own is convenient in order
+to use it for verification below.
+
+Now, search for a proof. We can provide a challenge via the `-c` flag. If no challenge is provided, a random challenge
+is generated and persisted at `.random_challenge`. Note that with the default settings we most likely are not going to
+find a proof directly, so keep trying until we do.
+```
+./bin/prover
+```
+Once we find a proof, we can reproduce the proof retrieval by using the persisted random challenge:
+```
+./bin/prover -c $(cat .random_challenge) > .proof
 ```
 
-TODO: Proofs and verification
+Now that we have also persisted the proof, we can try verifying the proof:
+```
+./bin/verifier -c $(cat .random_challenge) -key .seed -p $(cat .proof)
+```
 
 ## Contribute
 
