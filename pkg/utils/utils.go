@@ -50,6 +50,17 @@ func Trunc(x *big.Int, a, b, k int) *big.Int {
 	return x
 }
 
+// TruncPrimitive returns the b most significant of x. If a is non-zero then the ath to (b-1)th
+// bits of x are returned. x belongs to [2^k]
+func TruncPrimitive(x uint64, a, b, k int) uint64 {
+	x = x >> uint64(k-b)
+	if a > 0 {
+		least := 1<<b - a
+		x = x % uint64(least)
+	}
+	return x
+}
+
 // FillToBlock fills the provided byte slice with leading zeroes
 // to match AES's block size requirements.
 func FillToBlock(plain []byte) []byte {

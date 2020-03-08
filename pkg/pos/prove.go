@@ -6,12 +6,13 @@ import (
 	"fmt"
 	"io"
 	"math/big"
+	"math/bits"
 
 	"github.com/spf13/afero"
 
 	"github.com/kargakis/chiapos/pkg/serialize"
 	"github.com/kargakis/chiapos/pkg/utils"
-	"github.com/kargakis/chiapos/pkg/utils/bits"
+	mybits "github.com/kargakis/chiapos/pkg/utils/bits"
 )
 
 // Prove returns a space proof from the provided plot using the
@@ -66,12 +67,13 @@ func Prove(plotPath string, challenge []byte) ([]uint64, error) {
 			return nil, fmt.Errorf("cannot read entry: %w", err)
 		}
 		read += bytesRead
-		// TODO: Truncate fx to k bits
-		if entry.Fx == target {
+		// Truncate fx to k bits
+		fEntry := utils.TruncPrimitive(entry.Fx, 0, k, bits.Len64(entry.Fx))
+		if fEntry == target {
 			matches = append(matches, entry)
 		}
 		// We are not going to find any more matches
-		if entry.Fx > target {
+		if fEntry > target {
 			break
 		}
 	}
@@ -101,7 +103,7 @@ func getK(file afero.File) (int, error) {
 	if _, err := file.ReadAt(kBytes, 51); err != nil {
 		return 0, err
 	}
-	return int(bits.BytesToUint64(kBytes, 1)), nil
+	return int(mybits.BytesToUint64(kBytes, 1)), nil
 }
 
 func loadTable(file afero.File, start, k int) ([]*serialize.Entry, error) {
