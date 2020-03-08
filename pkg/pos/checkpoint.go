@@ -37,7 +37,6 @@ func Checkpoint(file afero.File, k int) (int, error) {
 		if err != nil {
 			return wrote, fmt.Errorf("cannot read left entry: %w", err)
 		}
-		count++
 
 		if count%parameters.ParamC1 == 0 {
 			// Write down the exact position of the checkpointed entry in the plot.
@@ -48,6 +47,7 @@ func Checkpoint(file afero.File, k int) (int, error) {
 			}
 			wrote += w
 		}
+		count++
 		read += bytesRead
 	}
 
