@@ -21,7 +21,6 @@ var (
 func main() {
 	flag.Parse()
 
-	fmt.Printf("Reading seed from %s...\n", *keyPath)
 	seed, err := ioutil.ReadFile(*keyPath)
 	if err != nil {
 		fmt.Printf("Cannot set up plot seed: %v\n", err)
@@ -58,4 +57,5 @@ func main() {
 		fmt.Printf("Cannot verify space proof: %v", err)
 		os.Exit(1)
 	}
+	fmt.Println("The provided space proof is valid.")
 }

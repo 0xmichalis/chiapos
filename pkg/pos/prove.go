@@ -42,7 +42,7 @@ func Prove(plotPath string, challenge []byte) (SpaceProof, error) {
 	if err != nil {
 		return nil, fmt.Errorf("cannot read k: %w", err)
 	}
-	fmt.Printf("Proving space with plot %s (k=%d)\n", plotPath, k)
+	// fmt.Printf("Proving space with plot %s (k=%d)\n", plotPath, k)
 
 	// get C1 start index
 	_, start, _, err := getLastTableIndexAndPositions(file)
@@ -51,7 +51,7 @@ func Prove(plotPath string, challenge []byte) (SpaceProof, error) {
 	}
 
 	// load C1 in memory
-	fmt.Println("Loading C1 table in memory...")
+	// fmt.Println("Loading C1 table in memory...")
 	entries, err := loadTable(file, start, k)
 	if err != nil {
 		return nil, fmt.Errorf("cannot load table into memory: %w", err)
@@ -67,7 +67,7 @@ func Prove(plotPath string, challenge []byte) (SpaceProof, error) {
 	}
 
 	// Find all indices where f7 == target
-	fmt.Printf("Searching for f7 outputs matching the challenge, starting from index %d\n", index)
+	// fmt.Println("Searching for f7 outputs matching the challenge...",)
 	var read int
 	var matches []*serialize.Entry
 	entryLen := serialize.EntrySize(k, 7)
