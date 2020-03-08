@@ -1,6 +1,8 @@
 package pos
 
 import (
+	"os"
+
 	"github.com/spf13/afero"
 )
 
@@ -12,7 +14,7 @@ func PlotDisk(filename string, k, availableMemory int, id []byte, retry bool) (i
 	var file afero.File
 	var err error
 	if retry {
-		file, err = fs.Open(filename)
+		file, err = fs.OpenFile(filename, os.O_RDWR, 0)
 	} else {
 		file, err = fs.Create(filename)
 	}

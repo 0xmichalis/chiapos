@@ -9,6 +9,7 @@ import (
 
 	"github.com/kargakis/chiapos/pkg/serialize"
 	"github.com/kargakis/chiapos/pkg/utils"
+	"github.com/kargakis/chiapos/pkg/utils/bits"
 )
 
 // Prove returns a space proof from the provided plot using the
@@ -92,10 +93,10 @@ func Prove(plotPath string, challenge []byte) ([]uint64, error) {
 // getK returns k from the header of the provided plot.
 func getK(file afero.File) (int, error) {
 	kBytes := make([]byte, 1)
-	if _, err := file.ReadAt(kBytes, 52); err != nil {
+	if _, err := file.ReadAt(kBytes, 51); err != nil {
 		return 0, err
 	}
-	return int(kBytes[0]), nil
+	return int(bits.BytesToUint64(kBytes, 1)), nil
 }
 
 func loadTable(file afero.File, start, k int) ([]*serialize.Entry, error) {

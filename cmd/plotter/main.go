@@ -75,7 +75,6 @@ func main() {
 	// run GC manually to flush unused memory as quickly as possible
 	go gc()
 
-	fmt.Printf("Generating plot at %s with k=%d\n", *plotPath, *k)
 	plotStart := time.Now()
 	wrote, err := pos.PlotDisk(*plotPath, *k, *availMem, key[:], *retry)
 	if err != nil {

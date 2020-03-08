@@ -30,10 +30,11 @@ func ForwardPropagate(fs afero.Fs, file afero.File, k, availableMemory int, id [
 	if retry {
 		tableIndex, tableStart, tableEnd, err = getLastTableIndexAndPositions(file)
 	} else {
+		fmt.Printf("Generating plot at %s with k=%d\n", file.Name(), k)
 		headerLen, err = WriteHeader(file, k, id)
 	}
 	if err != nil {
-		return wrote, err
+		return headerLen, err
 	}
 
 	start := time.Now()
@@ -233,7 +234,8 @@ func WriteHeader(file afero.File, k int, id []byte) (int, error) {
 		return n, err
 	}
 
-	nmore, err = file.Write([]byte{byte(k)})
+	kBytes := bits.Uint64ToBytes(uint64(k), 1)
+	nmore, err = file.Write(kBytes)
 	n += nmore
 	if err != nil {
 		return n, err
