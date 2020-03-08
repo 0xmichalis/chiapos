@@ -162,8 +162,8 @@ func WriteTable(file afero.File, k, t, previousStart, currentStart, entryLen int
 		if err != nil {
 			return wrote, fmt.Errorf("cannot read left entry: %w", err)
 		}
+		leftEntry.Index = previousStart + read
 		read += bytesRead
-		leftEntry.Index = index
 
 		leftBucketID = parameters.BucketID(leftEntry.Fx)
 		switch {

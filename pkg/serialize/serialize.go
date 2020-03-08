@@ -43,7 +43,7 @@ type Entry struct {
 	// Collated value to be used as input in the next table.
 	Collated *big.Int
 
-	// Index of the f output inside the table
+	// Index of the f output inside the plot.
 	Index int
 }
 
