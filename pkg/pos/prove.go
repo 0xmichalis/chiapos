@@ -147,16 +147,16 @@ func getInputs(file afero.File, t, k int, leftPos, rightPos uint64) ([]uint64, e
 
 	if t == 1 {
 		return []uint64{*leftEntry.X, *rightEntry.X}, nil
-	} else {
-		// aggregate inputs from previous table and forward to the next
-		left, err := getInputs(file, t-1, k, *leftEntry.Pos, *leftEntry.Pos+*leftEntry.Offset)
-		if err != nil {
-			return nil, fmt.Errorf("cannot get inputs for left entry at table %d: %w", t, err)
-		}
-		right, err := getInputs(file, t-1, k, *rightEntry.Pos, *rightEntry.Pos+*rightEntry.Offset)
-		if err != nil {
-			return nil, fmt.Errorf("cannot get inputs for right entry at table %d: %w", t, err)
-		}
-		return append(left, right...), nil
 	}
+
+	// aggregate inputs from previous table and forward to the next
+	left, err := getInputs(file, t-1, k, *leftEntry.Pos, *leftEntry.Pos+*leftEntry.Offset)
+	if err != nil {
+		return nil, fmt.Errorf("cannot get inputs for left entry at table %d: %w", t, err)
+	}
+	right, err := getInputs(file, t-1, k, *rightEntry.Pos, *rightEntry.Pos+*rightEntry.Offset)
+	if err != nil {
+		return nil, fmt.Errorf("cannot get inputs for right entry at table %d: %w", t, err)
+	}
+	return append(left, right...), nil
 }
