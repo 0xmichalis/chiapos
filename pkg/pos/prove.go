@@ -15,9 +15,22 @@ import (
 	mybits "github.com/kargakis/chiapos/pkg/utils/bits"
 )
 
+type SpaceProof []uint64
+
+func (sp SpaceProof) String() string {
+	var proofString string
+	for i, p := range sp {
+		proofString += fmt.Sprintf("%d", p)
+		if i != len(sp)-1 {
+			proofString += ","
+		}
+	}
+	return proofString
+}
+
 // Prove returns a space proof from the provided plot using the
 // provided challenge.
-func Prove(plotPath string, challenge []byte) ([]uint64, error) {
+func Prove(plotPath string, challenge []byte) (SpaceProof, error) {
 	fs := afero.NewOsFs()
 	file, err := fs.Open(plotPath)
 	if err != nil {
