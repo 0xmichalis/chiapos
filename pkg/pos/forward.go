@@ -75,8 +75,7 @@ func ForwardPropagate(fs afero.Fs, file afero.File, k, availableMemory int, id [
 	for t := tableIndex + 1; t <= 7; t++ {
 		start = time.Now()
 		fmt.Printf("Computing table %d...\n", t)
-		entryLen := serialize.EntrySize(k, t)
-		tWrote, err := WriteTable(file, k, t, previousStart, currentStart, entryLen, fx)
+		tWrote, err := WriteTable(file, k, t, previousStart, currentStart, fx)
 		if err != nil {
 			return tWrote + wrote, err
 		}
@@ -140,7 +139,7 @@ func WriteEOT(file afero.File, entryLen int) (int, error) {
 // The total number of bytes and the amount of entries written is returned.
 // Both the total number of bytes and the amount of entries contain EOT as an
 // entry so callers can easily estimate the average entry size.
-func WriteTable(file afero.File, k, t, previousStart, currentStart, entryLen int, fx *Fx) (int, error) {
+func WriteTable(file afero.File, k, t, previousStart, currentStart int, fx *Fx) (int, error) {
 	var (
 		read    int
 		wrote   int
@@ -153,6 +152,7 @@ func WriteTable(file afero.File, k, t, previousStart, currentStart, entryLen int
 	)
 
 	var index int
+	entryLen := serialize.EntrySize(k, t)
 
 	for {
 		// Read an entry from the previous table.

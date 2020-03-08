@@ -10,6 +10,7 @@ import (
 
 	"github.com/spf13/afero"
 
+	"github.com/kargakis/chiapos/pkg/parameters"
 	mybits "github.com/kargakis/chiapos/pkg/utils/bits"
 )
 
@@ -99,7 +100,7 @@ func Write(file afero.File, offset int64, fx uint64, x, pos, posOffset *uint64, 
 		return 0, fmt.Errorf("cannot set file offset at %d: %w", offset, err)
 	}
 	// TODO: Write in binary instead of text format (FlatBuffers?)
-	src := mybits.Uint64ToBytes(fx, k)
+	src := mybits.Uint64ToBytes(fx, k+parameters.ParamEXT)
 	dst := make([]byte, hex.EncodedLen(len(src)))
 	hex.Encode(dst, src)
 
@@ -219,7 +220,7 @@ func Read(file afero.File, offset int64, entryLen, k int) (*Entry, int, error) {
 		if err != nil {
 			return nil, read, fmt.Errorf("cannot decode f(x) (%s): %w", fxBytes, err)
 		}
-		fx := mybits.BytesToUint64(dst, k)
+		fx := mybits.BytesToUint64(dst, k+parameters.ParamEXT)
 
 		xBytes := preparePart(parts[1])
 		dst = make([]byte, hex.DecodedLen(len(xBytes)))
@@ -240,7 +241,7 @@ func Read(file afero.File, offset int64, entryLen, k int) (*Entry, int, error) {
 		if err != nil {
 			return nil, read, fmt.Errorf("cannot decode f(x) (%s): %w", fxBytes, err)
 		}
-		fx := mybits.BytesToUint64(dst, k)
+		fx := mybits.BytesToUint64(dst, k+parameters.ParamEXT)
 
 		posBytes := preparePart(parts[1])
 		dst = make([]byte, hex.DecodedLen(len(posBytes)))
@@ -268,7 +269,7 @@ func Read(file afero.File, offset int64, entryLen, k int) (*Entry, int, error) {
 		if err != nil {
 			return nil, read, fmt.Errorf("cannot decode f(x) (%s): %w", fxBytes, err)
 		}
-		fx := mybits.BytesToUint64(dst, k)
+		fx := mybits.BytesToUint64(dst, k+parameters.ParamEXT)
 
 		posBytes := preparePart(parts[1])
 		dst = make([]byte, hex.DecodedLen(len(posBytes)))
@@ -306,17 +307,18 @@ func Read(file afero.File, offset int64, entryLen, k int) (*Entry, int, error) {
 // EntrySize returns the expected entry size depending
 // on the space parameter k and the table index t.
 func EntrySize(k, t int) int {
-	kBytes := mybits.ToBytes(k)
+	xBytes := mybits.ToBytes(k)
+	fxBytes := mybits.ToBytes(k + parameters.ParamEXT)
 	switch t {
 	case 1:
 		// fx + entryDelimiter + x + entriesDelimiter
-		return kBytes + 1 + kBytes + 1
+		return fxBytes + 1 + xBytes + 1
 	case 2, 3, 4, 5, 6:
 		// fx + entryDelimiter + pos + entryDelimiter + posOffset + entryDelimiter + collated + entriesDelimiter
-		return kBytes + 1 + mybits.ToBytes(k+1) + 1 + posOffsetSize + 1 + mybits.ToBytes(CollaSize(t)*k) + 1
+		return fxBytes + 1 + mybits.ToBytes(k+1) + 1 + posOffsetSize + 1 + mybits.ToBytes(CollaSize(t)*k) + 1
 	case 7:
 		// fx + entryDelimiter + pos + entryDelimiter + posOffset + entriesDelimiter
-		return kBytes + 1 + mybits.ToBytes(k+1) + 1 + posOffsetSize + 1
+		return fxBytes + 1 + mybits.ToBytes(k+1) + 1 + posOffsetSize + 1
 	}
 	return 0
 }
