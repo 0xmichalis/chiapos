@@ -2,24 +2,38 @@ package pos
 
 import (
 	"crypto/aes"
+	"fmt"
 	"math"
+	"math/big"
+	"math/bits"
 
-	"github.com/kargakis/chiapos/pkg/utils/bits"
+	"github.com/kargakis/chiapos/pkg/utils"
+
+	mybits "github.com/kargakis/chiapos/pkg/utils/bits"
 )
 
 // Verify verifies the provided proof given the challenge, seed, and k.
 func Verify(challenge string, seed []byte, k int, proof []uint64) error {
+	if len(proof) != 64 {
+		return fmt.Errorf("invalid proof length: expected 64 values, got %d", len(proof))
+	}
+
 	f1, err := NewF1(k, seed)
 	if err != nil {
 		return err
 	}
 
 	var fxs []uint64
+	var metadata []*big.Int
 	for _, x := range proof {
 		bucket, pos := findBucketAndPosForX(x)
+		fmt.Printf("bucket and pos for x=%d: %d %d\n", x, bucket, pos)
+
 		// TODO: Share calculations in case xs are found in the same bucket.
 		fxBucket := f1.Calculate(bucket)
-		fxs = append(fxs, bits.BytesToUint64(fxBucket[pos], k))
+		fxs = append(fxs, mybits.BytesToUint64(fxBucket[pos], k))
+		// TODO: Converting to an int64 may be problematic for large k?
+		metadata = append(metadata, big.NewInt(int64(x)))
 	}
 
 	fx, err := NewFx(k, seed)
@@ -27,18 +41,41 @@ func Verify(challenge string, seed []byte, k int, proof []uint64) error {
 		return err
 	}
 
-	for t := 2; t <= 7; t++ {
-		// fx.Calculate(t)
+	for t := 2; t < 7; t++ {
+		var newFxs []uint64
+		var newMetadata []*big.Int
 		for i := 0; i < int(math.Pow(float64(2), float64(7-t))); i++ {
-			// 2 matches in the 1st table, 4 in the 2nd, 8 in the 3rd, and so on...
-			step := int(math.Pow(float64(2), float64(t-1)))
-			// TODO: Find whether fxs match; need to refactor WriteMatches to share code
-			_ = step
+			leftIndex := i * 2
+			rightIndex := leftIndex + 1
+
+			if !matchNaive(fxs[leftIndex], fxs[rightIndex]) {
+				return fmt.Errorf("invalid proof: proofs do not match at table %d", t)
+			}
 
 			// Then calculate for the next table
-			// fx.Calculate(t, fxs[])
-			_ = fx
+			f, err := fx.Calculate(t, fxs[leftIndex], metadata[leftIndex], metadata[rightIndex])
+			if err != nil {
+				return fmt.Errorf("cannot compute f%d(x): %w", t, err)
+			}
+			newFxs = append(newFxs, f)
+			collated, err := Collate(t, k, metadata[leftIndex], metadata[rightIndex])
+			if err != nil {
+				return fmt.Errorf("cannot collate outputs: %w", err)
+			}
+			newMetadata = append(newMetadata, collated)
 		}
+		fxs = newFxs
+		metadata = newMetadata
+	}
+
+	// Now truncate both the challenge and the f7 output
+	// and see whether the space proof is valid.
+	challBig := new(big.Int).SetBytes([]byte(challenge))
+	challBig = utils.Trunc(challBig, 0, k, challBig.BitLen())
+	target := challBig.Uint64()
+	fEntry := utils.TruncPrimitive(fxs[0], 0, k, bits.Len64(fxs[0]))
+	if fEntry != target {
+		return fmt.Errorf("invalid proof: f7 output does not match the provided challenge")
 	}
 
 	return nil
