@@ -64,7 +64,7 @@ func (f *F1) Calculate(x uint64) [][]byte {
 		left, right []byte
 		xIndex      uint64
 		leftSize    int
-		needsTrunc  = mybits.ToBytes(f.k) != f.k*8
+		needsTrunc  = mybits.ToBytes(f.k) != f.k/8
 	)
 
 	// slice the ciphertext properly to get back all the f(x)s
