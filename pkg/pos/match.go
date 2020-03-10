@@ -82,8 +82,8 @@ func WriteMatches(file afero.File, fx *Fx, left, right []*serialize.Entry, curre
 				if targetBid == rightBid {
 					le := left[leftIndex]
 					re := right[rightPositions[targetCid][i]]
-					leftID := le.Fx / parameters.ParamBC
-					rightID := re.Fx / parameters.ParamBC
+					leftID := parameters.BucketID(le.Fx)
+					rightID := parameters.BucketID(re.Fx)
 					if leftID+1 == rightID {
 						var leftMetadata, rightMetadata *big.Int
 						if le.X != nil {

@@ -7,7 +7,6 @@ import (
 	"math"
 
 	"github.com/kargakis/chiapos/pkg/parameters"
-	"github.com/kargakis/chiapos/pkg/utils"
 	mybits "github.com/kargakis/chiapos/pkg/utils/bits"
 )
 
@@ -45,17 +44,15 @@ func NewF1(k int, key []byte) (*F1, error) {
 // Calculate accepts a number and calculates a batch of
 // 2^(k+kExtraBits)-bit outputs.
 func (f *F1) Calculate(x uint64) [][]byte {
-	counter := (x * uint64(f.k)) / kBlockSizeBits
-
 	cipherBytes := mybits.ToBytes(f.k * kBlockSizeBits)
 	ciphertext := make([]byte, cipherBytes)
 	var index, start, end int
 	for cipherBytes > end {
-		counterBytes := mybits.Uint64ToBytes(counter, f.k)
 		start = index * aes.BlockSize % (cipherBytes + 1)
 		end = ((index + 1) * aes.BlockSize) % (cipherBytes + 1)
-		f.key.Encrypt(ciphertext[start:end], utils.FillToBlock(counterBytes))
-		counter++
+		counterBytes := mybits.Uint64ToBytes(x, kBlockSizeBits)
+		f.key.Encrypt(ciphertext[start:end], counterBytes)
+		x++
 		index++
 	}
 
