@@ -19,7 +19,7 @@ const (
 	// Space parameters controlling the plot size.
 
 	// Must be set high enough to prevent attacks of fast plotting
-	KMinPlotSize = 19
+	KMinPlotSize = 16
 	// Set at 59 to allow easy use of 64 bit integers
 	KMaxPlotSize = 59
 )

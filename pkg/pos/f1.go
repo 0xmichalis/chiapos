@@ -4,10 +4,11 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"fmt"
+	"math"
 
 	"github.com/kargakis/chiapos/pkg/parameters"
 	"github.com/kargakis/chiapos/pkg/utils"
-	"github.com/kargakis/chiapos/pkg/utils/bits"
+	mybits "github.com/kargakis/chiapos/pkg/utils/bits"
 )
 
 const (
@@ -46,11 +47,11 @@ func NewF1(k int, key []byte) (*F1, error) {
 func (f *F1) Calculate(x uint64) [][]byte {
 	counter := (x * uint64(f.k)) / kBlockSizeBits
 
-	cipherBytes := bits.ToBytes(f.k * kBlockSizeBits)
+	cipherBytes := mybits.ToBytes(f.k * kBlockSizeBits)
 	ciphertext := make([]byte, cipherBytes)
 	var index, start, end int
 	for cipherBytes > end {
-		counterBytes := bits.Uint64ToBytes(counter, f.k)
+		counterBytes := mybits.Uint64ToBytes(counter, f.k)
 		start = index * aes.BlockSize % (cipherBytes + 1)
 		end = ((index + 1) * aes.BlockSize) % (cipherBytes + 1)
 		f.key.Encrypt(ciphertext[start:end], utils.FillToBlock(counterBytes))
@@ -58,29 +59,57 @@ func (f *F1) Calculate(x uint64) [][]byte {
 		index++
 	}
 
-	var outputs [][]byte
-	kBytes := bits.ToBytes(f.k)
-	needsTrunc := kBytes != f.k*8
-	tmp := make([]byte, kBytes)
+	var (
+		outputs     [][]byte
+		left, right []byte
+		xIndex      uint64
+		leftSize    int
+		needsTrunc  = mybits.ToBytes(f.k) != f.k*8
+	)
+
 	// slice the ciphertext properly to get back all the f(x)s
-	var xIndex uint64
 	for i, c := range ciphertext {
-		if (i+1)%kBytes != 0 {
-			tmp[i%kBytes] = c
+		if !containsTwoKs(i, f.k) {
+			left = append(left, c)
+			leftSize += 8
 		} else {
 			if needsTrunc {
-				tmp[i%kBytes] = c << (8 - (f.k % 8))
+				lb, rb := getLeftAndRight(c, f.k-leftSize)
+				left = append(left, lb)
+				right = append(right, rb)
+				leftSize = 8 - (f.k - leftSize)
 			} else {
-				tmp[i%kBytes] = c
+				left = append(left, c)
+				leftSize = 0
 			}
-			outputs = append(outputs, tmp)
-			extended := bits.Uint64ToBytes(x+xIndex%parameters.ParamM, parameters.ParamEXT)
+			outputs = append(outputs, left)
+			extended := mybits.Uint64ToBytes(x+xIndex%parameters.ParamM, parameters.ParamEXT)
 			outputs[xIndex] = append(outputs[xIndex], extended...)
 			xIndex++
-			// clean up buffer
-			tmp = make([]byte, kBytes)
+			// clean up buffers
+			left = right
+			right = nil
 		}
 	}
 
 	return outputs
+}
+
+func containsTwoKs(index, k int) bool {
+	return index*8/k != (index+1)*8/k
+}
+
+func getLeftAndRight(c byte, remainingLeftSize int) (byte, byte) {
+	var mask int
+	if remainingLeftSize == 1 {
+		// the mask will overflow so we need to handle this case manually
+		mask = 7
+	} else {
+		mask = 8 - remainingLeftSize + 1
+	}
+	m := byte(math.Pow(2, float64(mask)))
+
+	left := c >> (8 - remainingLeftSize)
+	right := c % m
+	return left, right
 }
