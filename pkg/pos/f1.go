@@ -5,6 +5,9 @@ import (
 	"crypto/cipher"
 	"fmt"
 	"math"
+	"math/big"
+
+	"github.com/kargakis/chiapos/pkg/utils"
 
 	"github.com/kargakis/chiapos/pkg/parameters"
 	mybits "github.com/kargakis/chiapos/pkg/utils/bits"
@@ -41,8 +44,37 @@ func NewF1(k int, key []byte) (*F1, error) {
 	return f1, nil
 }
 
+func (f *F1) CalculateOne(x uint64) uint64 {
+	q, r := new(big.Int).DivMod(new(big.Int).SetUint64(x*uint64(f.k)), big.NewInt(kBlockSizeBits), new(big.Int))
+	// fmt.Printf("q=%d, r=%d, x=%d, k=%d\n", q.Uint64(), r.Uint64(), x, f.k)
+
+	var qCipher [16]byte
+	data := utils.FillToBlock(q.Bytes())
+	f.key.Encrypt(qCipher[:], data)
+	res := new(big.Int).SetBytes(qCipher[:])
+
+	if int(r.Uint64())+f.k <= kBlockSizeBits {
+		res = utils.Trunc(res, int(r.Uint64()), int(r.Uint64())+f.k, kBlockSizeBits)
+	} else {
+		part1 := utils.Trunc(res, int(r.Uint64()), kBlockSizeBits, kBlockSizeBits)
+		var q1Cipher [16]byte
+		data := utils.FillToBlock(q.Add(q, big.NewInt(1)).Bytes())
+		f.key.Encrypt(q1Cipher[:], data)
+		part2 := new(big.Int).SetBytes(q1Cipher[:])
+		part2 = utils.Trunc(part2, 0, int(r.Uint64())+f.k-kBlockSizeBits, kBlockSizeBits)
+		res = utils.Concat(uint64(part2.BitLen()), part1.Uint64(), part2.Uint64())
+	}
+
+	f1x := utils.ConcatExtended(res.Uint64(), x)
+	// fmt.Printf("Calculated f1(x)=%d for x=%d\n", f1x, x)
+	return f1x
+}
+
 // Calculate accepts a number and calculates a batch of
 // 2^(k+kExtraBits)-bit outputs.
+// TODO: Currently this impl is generating a lot of matches
+// in comparison to the naive approach (CalculateOne). Figure
+// out why.
 func (f *F1) Calculate(x uint64) [][]byte {
 	cipherBytes := mybits.ToBytes(f.k * kBlockSizeBits)
 	ciphertext := make([]byte, cipherBytes)
@@ -73,6 +105,9 @@ func (f *F1) Calculate(x uint64) [][]byte {
 		} else {
 			if needsTrunc {
 				lb, rb := getLeftAndRight(c, f.k-leftSize)
+				// TODO: This append is wrong, what is needed here for the
+				// left byte is to shift all other left bytes f.k-leftSize bits
+				// to the left, handle overflows, then add lb.
 				left = append(left, lb)
 				right = append(right, rb)
 				// the remaining bits (right) are assigned to leftSize
@@ -84,6 +119,7 @@ func (f *F1) Calculate(x uint64) [][]byte {
 			}
 			outputs = append(outputs, left)
 			extended := mybits.Uint64ToBytes((x+xIndex)%parameters.ParamM, parameters.ParamEXT)
+			// TODO: Similar to the lb append above, this is also wrong.
 			outputs[xIndex] = append(outputs[xIndex], extended...)
 			xIndex++
 			// clean up buffers

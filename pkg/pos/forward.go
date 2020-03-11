@@ -106,18 +106,14 @@ func WriteFirstTable(file afero.File, k, start int, id []byte) (int, error) {
 	var wrote int
 	maxNumber := uint64(math.Pow(2, float64(k)))
 
-	for x := uint64(0); x < maxNumber; {
-		fxs := f1.Calculate(x)
-		for _, fx := range fxs {
-			// TODO: Avoid the bytes to int to bytes conversion
-			f1x := bits.BytesToUint64(fx, k+parameters.ParamEXT)
-			n, err := serialize.Write(file, int64(start+wrote), f1x, &x, nil, nil, nil, k)
-			if err != nil {
-				return wrote + n, err
-			}
-			wrote += n
-			x++
+	// TODO: Batch writes
+	for x := uint64(0); x < maxNumber; x++ {
+		f1x := f1.CalculateOne(x)
+		n, err := serialize.Write(file, int64(start+wrote), f1x, &x, nil, nil, nil, k)
+		if err != nil {
+			return wrote + n, err
 		}
+		wrote += n
 	}
 
 	eotBytes, err := WriteEOT(file, wrote/int(maxNumber))
