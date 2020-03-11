@@ -47,6 +47,7 @@ func (f *F1) Calculate(x uint64) [][]byte {
 	cipherBytes := mybits.ToBytes(f.k * kBlockSizeBits)
 	ciphertext := make([]byte, cipherBytes)
 	var index, start, end int
+
 	for cipherBytes > end {
 		start = index * aes.BlockSize % (cipherBytes + 1)
 		end = ((index + 1) * aes.BlockSize) % (cipherBytes + 1)
@@ -74,13 +75,15 @@ func (f *F1) Calculate(x uint64) [][]byte {
 				lb, rb := getLeftAndRight(c, f.k-leftSize)
 				left = append(left, lb)
 				right = append(right, rb)
+				// the remaining bits (right) are assigned to leftSize
+				// since right will become left in the next iteration.
 				leftSize = 8 - (f.k - leftSize)
 			} else {
 				left = append(left, c)
 				leftSize = 0
 			}
 			outputs = append(outputs, left)
-			extended := mybits.Uint64ToBytes(x+xIndex%parameters.ParamM, parameters.ParamEXT)
+			extended := mybits.Uint64ToBytes((x+xIndex)%parameters.ParamM, parameters.ParamEXT)
 			outputs[xIndex] = append(outputs[xIndex], extended...)
 			xIndex++
 			// clean up buffers

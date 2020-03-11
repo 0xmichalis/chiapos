@@ -16,7 +16,7 @@ func init() {
 
 // Precomputed shifts that specify which entries match with which other entries
 // in adjacent buckets.
-var matchingShifts = [2][parameters.ParamC]uint64{}
+var matchingShifts = [2][parameters.ParamM]uint64{}
 
 // Performs the precomputation of shifts.
 func precomputeShifts() {
