@@ -35,7 +35,7 @@ func Verify(challenge string, seed []byte, k int, proof []uint64) error {
 		return err
 	}
 
-	for t := 2; t < 7; t++ {
+	for t := 2; t <= 7; t++ {
 		var newFxs []uint64
 		var newMetadata []*big.Int
 		for i := 0; i < int(math.Pow(float64(2), float64(7-t))); i++ {
@@ -52,11 +52,13 @@ func Verify(challenge string, seed []byte, k int, proof []uint64) error {
 				return fmt.Errorf("cannot compute f%d(x): %w", t, err)
 			}
 			newFxs = append(newFxs, f)
-			collated, err := Collate(t, k, metadata[leftIndex], metadata[rightIndex])
-			if err != nil {
-				return fmt.Errorf("cannot collate outputs: %w", err)
+			if t != 7 {
+				collated, err := Collate(t, k, metadata[leftIndex], metadata[rightIndex])
+				if err != nil {
+					return fmt.Errorf("cannot collate outputs: %w", err)
+				}
+				newMetadata = append(newMetadata, collated)
 			}
-			newMetadata = append(newMetadata, collated)
 		}
 		fxs = newFxs
 		metadata = newMetadata
