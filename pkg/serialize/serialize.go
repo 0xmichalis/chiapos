@@ -20,7 +20,7 @@ const (
 	EOT = "\\0"
 
 	// size of the position offset in bits
-	posOffsetSize = 10
+	posOffsetSize = 32
 
 	posBitSize = 64
 
