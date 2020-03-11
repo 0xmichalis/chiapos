@@ -119,7 +119,7 @@ func Write(file afero.File, offset int64, fx uint64, x, pos, posOffset *uint64, 
 		dst = append(dst, entryDelimiter)
 		// Store positions to previous tables, in k+1 bits. This is because we may have
 		// more than 2^k entries in some of the tables, so we need an extra bit.
-		dst = writeTo(dst, *pos, 64)
+		dst = writeTo(dst, *pos, posBitSize)
 	}
 	if posOffset != nil {
 		dst = append(dst, entryDelimiter)
@@ -344,16 +344,20 @@ func ReadCheckpoint(buf *bufio.Reader, k int) (*Entry, error) {
 func EntrySize(k, t int) int {
 	xBytes := mybits.ToBytes(k)
 	fxBytes := mybits.ToBytes(k + parameters.ParamEXT)
+	posBytes := mybits.ToBytes(posBitSize)
+	offsetBytes := mybits.ToBytes(posOffsetSize)
+	collBytes := mybits.ToBytes(CollaSize(t) * k)
+
 	switch t {
 	case 1:
 		// fx + entryDelimiter + x + entriesDelimiter
 		return 2*fxBytes + 1 + 2*xBytes + 1
 	case 2, 3, 4, 5, 6:
 		// fx + entryDelimiter + pos + entryDelimiter + posOffset + entryDelimiter + collated + entriesDelimiter
-		return 2*fxBytes + 1 + 2*mybits.ToBytes(64) + 1 + 2*posOffsetSize + 1 + 2*mybits.ToBytes(CollaSize(t)*k) + 1
+		return 2*fxBytes + 1 + 2*posBytes + 1 + 2*offsetBytes + 1 + 2*collBytes + 1
 	case 7:
 		// fx + entryDelimiter + pos + entryDelimiter + posOffset + entriesDelimiter
-		return 2*fxBytes + 1 + 2*mybits.ToBytes(64) + 1 + 2*posOffsetSize + 1
+		return 2*fxBytes + 1 + 2*posBytes + 1 + 2*offsetBytes + 1
 	}
 	return 0
 }
