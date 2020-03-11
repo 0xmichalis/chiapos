@@ -54,7 +54,7 @@ func main() {
 	}
 
 	if err := pos.Verify(*c, seed, *k, proofs); err != nil {
-		fmt.Printf("Cannot verify space proof: %v", err)
+		fmt.Printf("Cannot verify space proof: %v\n", err)
 		os.Exit(1)
 	}
 	fmt.Println("The provided space proof is valid.")

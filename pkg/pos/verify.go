@@ -8,8 +8,6 @@ import (
 	"math/bits"
 
 	"github.com/kargakis/chiapos/pkg/utils"
-
-	mybits "github.com/kargakis/chiapos/pkg/utils/bits"
 )
 
 // Verify verifies the provided proof given the challenge, seed, and k.
@@ -26,13 +24,8 @@ func Verify(challenge string, seed []byte, k int, proof []uint64) error {
 	var fxs []uint64
 	var metadata []*big.Int
 	for _, x := range proof {
-		bucket, pos := findBucketAndPosForX(x)
-		fmt.Printf("bucket and pos for x=%d: %d %d\n", x, bucket, pos)
-
-		// TODO: Share calculations in case xs are found in the same bucket.
-		fxBucket := f1.Calculate(bucket)
-		fxs = append(fxs, mybits.BytesToUint64(fxBucket[pos], k))
-		// TODO: Converting to an int64 may be problematic for large k?
+		fx := f1.CalculateOne(x)
+		fxs = append(fxs, fx)
 		metadata = append(metadata, big.NewInt(int64(x)))
 	}
 
