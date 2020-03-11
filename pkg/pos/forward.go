@@ -259,21 +259,21 @@ func WriteHeader(file afero.File, k int, id []byte) (int, error) {
 }
 
 // GetKey returns the key from an existing plot.
-func GetKey(plotPath string) ([32]byte, error) {
+func GetKey(plotPath string) ([]byte, error) {
 	const expected = 32
-	key := [expected]byte{}
+	key := make([]byte, expected)
 
 	fs := afero.NewOsFs()
 	file, err := fs.Open(plotPath)
 	if err != nil {
-		return key, fmt.Errorf("cannot open plot file: %w", err)
+		return nil, fmt.Errorf("cannot open plot file: %w", err)
 	}
-	read, err := file.ReadAt(key[:], int64(len(plotHeader)))
+	read, err := file.ReadAt(key, int64(len(plotHeader)))
 	if err != nil {
-		return key, fmt.Errorf("cannot read plot: %w", err)
+		return nil, fmt.Errorf("cannot read plot: %w", err)
 	}
 	if read != expected {
-		return key, fmt.Errorf("expected to read %d bytes, read %d", expected, read)
+		return nil, fmt.Errorf("expected to read %d bytes, read %d", expected, read)
 	}
 
 	return key, nil

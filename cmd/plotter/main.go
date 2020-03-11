@@ -22,8 +22,8 @@ var (
 	availMem = flag.Int("m", 5*1024*1024*1024, "Max memory to use when plotting. Defaults to all OS available memory when set to zero.")
 )
 
-func retrieveKey(keyPath, plotPath string, retry bool) ([32]byte, error) {
-	var key [32]byte
+func retrieveKey(keyPath, plotPath string, retry bool) ([]byte, error) {
+	var key []byte
 	var err error
 
 	if retry {
@@ -36,7 +36,7 @@ func retrieveKey(keyPath, plotPath string, retry bool) ([32]byte, error) {
 		_, err = rand.Read(key[:])
 	} else {
 		fmt.Printf("Reading seed from %s...\n", keyPath)
-		_, err = ioutil.ReadFile(keyPath)
+		key, err = ioutil.ReadFile(keyPath)
 	}
 
 	return key, err
