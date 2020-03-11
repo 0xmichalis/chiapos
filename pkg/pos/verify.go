@@ -26,6 +26,7 @@ func Verify(challenge string, seed []byte, k int, proof []uint64) error {
 	for _, x := range proof {
 		fx := f1.CalculateOne(x)
 		fxs = append(fxs, fx)
+		// TODO: Converting to an int64 (as opposed to uint64) may be problematic for large k?
 		metadata = append(metadata, big.NewInt(int64(x)))
 	}
 
