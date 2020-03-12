@@ -25,8 +25,8 @@ The seed is optional and if none is provided, the plotter will generate its own 
 to use it for verification below.
 
 Now, search for a proof. We can provide a challenge via the `-c` flag. If no challenge is provided, a random challenge
-is generated and persisted at `.random_challenge`. Note that with the default settings we most likely are not going to
-find a proof directly, so keep trying until we do.
+is generated and persisted at `.random_challenge`. It may happen that we will not find a proof of space immediately
+because none exists for the provided challenge. If so, try with a different challenge until one is found.
 ```
 ./bin/prover
 ```

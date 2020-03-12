@@ -16,7 +16,7 @@ import (
 
 var (
 	retry    = flag.Bool("retry", false, "If set to true, try to restore from a pre-existing plot")
-	k        = flag.Int("k", 19, "Storage parameter")
+	k        = flag.Int("k", 18, "Storage parameter")
 	plotPath = flag.String("f", "plot.dat", "Final path to the plot")
 	keyPath  = flag.String("key", "", "Path to key to be used as a plot seed")
 	availMem = flag.Int("m", 5*1024*1024*1024, "Max memory to use when plotting. Defaults to all OS available memory when set to zero.")
