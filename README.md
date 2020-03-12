@@ -35,9 +35,9 @@ Once we find a proof, we can reproduce the proof retrieval by using the persiste
 ./bin/prover -c $(cat .random_challenge) > .proof
 ```
 
-Now that we have also persisted the proof, we can try verifying the proof:
+Now that we have also persisted the proof, we can verify it:
 ```
-./bin/verifier -c $(cat .random_challenge) -key .seed -p $(cat .proof)
+./bin/verifier -key .seed -p $(cat .proof) -c $(cat .random_challenge)
 ```
 
 ## Contribute
