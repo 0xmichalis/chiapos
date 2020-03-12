@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"math"
+	"math/big"
 	"time"
 
 	"github.com/spf13/afero"
@@ -176,12 +177,41 @@ func WriteTable(file afero.File, k, t, previousStart, currentStart int, fx *Fx) 
 			if len(leftBucket) > 0 && len(rightBucket) > 0 {
 				// We have finished adding to both buckets, now we need to compare them.
 				// For any matches, we are going to calculate outputs for the next table.
-				wroteEntries, wroteBytes, err := WriteMatches(file, fx, leftBucket, rightBucket, currentStart+wrote, t, k)
-				if err != nil {
-					return wrote, fmt.Errorf("cannot write matches: %w", err)
+				matches := FindMatches(leftBucket, rightBucket)
+				for _, m := range matches {
+					le, re := m.Left, m.Right
+					var leftMetadata, rightMetadata *big.Int
+					if le.X != nil {
+						leftMetadata = big.NewInt(int64(*le.X))
+					} else if le.Collated != nil {
+						leftMetadata = le.Collated
+					}
+					if re.X != nil {
+						rightMetadata = big.NewInt(int64(*re.X))
+					} else if re.Collated != nil {
+						rightMetadata = re.Collated
+					}
+
+					f, err := fx.Calculate(t, le.Fx, leftMetadata, rightMetadata)
+					if err != nil {
+						return wrote, err
+					}
+					// This is the collated output stored next to the entry - useful
+					// for generating outputs for the next table.
+					collated, err := Collate(t, k, leftMetadata, rightMetadata)
+					if err != nil {
+						return wrote, err
+					}
+					// Now write the new output in the next table.
+					index := uint64(le.Index)
+					offset := uint64(re.Index - le.Index)
+					w, err := serialize.Write(file, int64(currentStart+wrote), f, nil, &index, &offset, collated, k)
+					if err != nil {
+						return wrote, err
+					}
+					entries++
+					wrote += w
 				}
-				entries += wroteEntries
-				wrote += wroteBytes
 			}
 			if leftBucketID == bucketID+2 {
 				// Keep the right bucket as the new left bucket

@@ -7,6 +7,7 @@ import (
 	"math/big"
 	"math/bits"
 
+	"github.com/kargakis/chiapos/pkg/serialize"
 	"github.com/kargakis/chiapos/pkg/utils"
 )
 
@@ -42,7 +43,9 @@ func Verify(challenge string, seed []byte, k int, proof []uint64) error {
 			leftIndex := i * 2
 			rightIndex := leftIndex + 1
 
-			if !matchNaive(fxs[leftIndex], fxs[rightIndex]) {
+			le := []*serialize.Entry{{Fx: fxs[leftIndex]}}
+			re := []*serialize.Entry{{Fx: fxs[rightIndex]}}
+			if match := FindMatches(le, re); len(match) != 1 {
 				return fmt.Errorf("invalid proof: proofs do not match at table %d", t)
 			}
 
