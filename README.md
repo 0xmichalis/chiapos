@@ -9,7 +9,7 @@ Golang and think Proofs of Space sounds cool, feel free to contribute!
 
 ## Build
 
-[Golang](https://golang.org/) is the only requirement to build this project.
+[Golang](https://golang.org/) (1.13+) is the only requirement to build this project.
 Once you have it installed:
 ```
 make build
