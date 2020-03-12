@@ -12,7 +12,7 @@ import (
 
 // At is a high-level hash function that calls AES on its inputs.
 // c is meant to be created using the plot seed as a key.
-func At(x, y *big.Int, k, t int, c cipher.Block) (uint64, error) {
+func At(x, y *big.Int, k, t int, c cipher.Block) uint64 {
 	param := new(big.Int).Lsh(big.NewInt(1), 128)
 
 	// setup x low and high
@@ -71,6 +71,5 @@ func At(x, y *big.Int, k, t int, c cipher.Block) (uint64, error) {
 
 	// need to return the most significant k+paramEXT bits
 	res := new(big.Int).SetBytes(cipherText[:])
-	r := utils.Trunc(res, 0, k+parameters.ParamEXT, res.BitLen()).Uint64()
-	return r, nil
+	return utils.Trunc(res, 0, k+parameters.ParamEXT, res.BitLen()).Uint64()
 }

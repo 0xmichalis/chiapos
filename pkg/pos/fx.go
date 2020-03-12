@@ -36,10 +36,6 @@ func NewFx(k int, key []byte) (*Fx, error) {
 }
 
 func (f *Fx) Calculate(t int, fx uint64, cl, cr *big.Int) (uint64, error) {
-	at, err := At(cl, cr, f.k, t, f.key)
-	if err != nil {
-		return 0, fmt.Errorf("cannot generate output via AES encryption: %w", err)
-	}
-
+	at := At(cl, cr, f.k, t, f.key)
 	return at ^ fx, nil
 }

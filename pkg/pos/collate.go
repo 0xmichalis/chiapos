@@ -16,7 +16,7 @@ func Collate(t, k int, l, r *big.Int) (*big.Int, error) {
 		return utils.ConcatBig(2*k, l, r), nil
 
 	case 4:
-		return l.Xor(l, r), nil
+		return new(big.Int).Xor(l, r), nil
 
 	case 5:
 		// TODO: When bytes are deserialized to a primitive such as int or big.Int
@@ -25,8 +25,8 @@ func Collate(t, k int, l, r *big.Int) (*big.Int, error) {
 		//if l.BitLen()%4 != 0 {
 		//	return nil, fmt.Errorf("invalid bit length for output %d, expected bit_len%%4==0", l.BitLen())
 		//}
-		l.Xor(l, r)
-		return utils.Trunc(l, 0, l.BitLen()*3/4, l.BitLen()), nil
+		tmp := new(big.Int).Xor(l, r)
+		return utils.Trunc(tmp, 0, tmp.BitLen()*3/4, tmp.BitLen()), nil
 
 	case 6:
 		// TODO: When bytes are deserialized to a primitive such as int or big.Int
@@ -35,8 +35,8 @@ func Collate(t, k int, l, r *big.Int) (*big.Int, error) {
 		//if l.BitLen()%3 != 0 {
 		//	return nil, fmt.Errorf("invalid bit length for output %d, expected bit_len%%3==0", l.BitLen())
 		//}
-		l.Xor(l, r)
-		return utils.Trunc(l, 0, l.BitLen()*2/3, l.BitLen()), nil
+		tmp := new(big.Int).Xor(l, r)
+		return utils.Trunc(tmp, 0, tmp.BitLen()*2/3, tmp.BitLen()), nil
 	}
 	return nil, nil
 }
