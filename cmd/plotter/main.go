@@ -33,10 +33,17 @@ func retrieveKey(keyPath, plotPath string, retry bool) ([]byte, error) {
 	} else if keyPath == "" {
 		// If a key is not provided, generate one in random
 		fmt.Println("Generating seed...")
-		_, err = rand.Read(key[:])
+		key = make([]byte, utils.KeyLen)
+		_, err = rand.Read(key)
+		if err == nil {
+			err = ioutil.WriteFile(".seed", key, 0600)
+		}
 	} else {
 		fmt.Printf("Reading seed from %s...\n", keyPath)
 		key, err = ioutil.ReadFile(keyPath)
+		if err == nil {
+			key = utils.NormalizeKey(key)
+		}
 	}
 
 	return key, err

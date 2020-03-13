@@ -17,12 +17,11 @@ make build
 
 ## Run
 
-Create a seed at `.seed` and plot your disk with:
+Plot your disk with:
 ```
-./bin/plotter -key .seed
+./bin/plotter
 ```
-The seed is optional and if none is provided, the plotter will generate its own but using our own is convenient in order
-to use it for verification below.
+If no plot seed is provided via a file, a random one will be generated at `.seed`.
 
 Now, search for a proof. We can provide a challenge via the `-c` flag. If no challenge is provided, a random challenge
 is generated and persisted at `.random_challenge`. It may happen that we will not find a proof of space immediately

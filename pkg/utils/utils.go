@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"bytes"
 	"crypto/aes"
 	"fmt"
 	"math/big"
@@ -118,4 +119,14 @@ func class(size int) int {
 		return 0
 	}
 	return 1 + class(size/1024)
+}
+
+const KeyLen = 32
+
+func NormalizeKey(key []byte) []byte {
+	if len(key) >= KeyLen {
+		return key[:KeyLen]
+	}
+	leading := bytes.Repeat([]byte("0"), KeyLen-len(key))
+	return append(leading, key...)
 }

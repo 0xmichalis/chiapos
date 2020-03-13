@@ -113,7 +113,7 @@ func Prove(plotPath string, challenge []byte) (SpaceProof, error) {
 // getK returns k from the header of the provided plot.
 func getK(file afero.File) (int, error) {
 	kBytes := make([]byte, 1)
-	if _, err := file.ReadAt(kBytes, 52); err != nil {
+	if _, err := file.ReadAt(kBytes, int64(len(plotHeader)+utils.KeyLen)); err != nil {
 		return 0, err
 	}
 	return int(mybits.BytesToUint64(kBytes, 1)), nil

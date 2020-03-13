@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/kargakis/chiapos/pkg/pos"
+	"github.com/kargakis/chiapos/pkg/utils"
 )
 
 var (
@@ -26,6 +27,7 @@ func main() {
 		fmt.Printf("Cannot set up plot seed: %v\n", err)
 		os.Exit(1)
 	}
+	seed = utils.NormalizeKey(seed)
 
 	if *c == "" {
 		fmt.Println("Challenge cannot be empty")

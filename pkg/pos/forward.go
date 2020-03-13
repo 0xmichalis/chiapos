@@ -290,8 +290,7 @@ func WriteHeader(file afero.File, k int, id []byte) (int, error) {
 
 // GetKey returns the key from an existing plot.
 func GetKey(plotPath string) ([]byte, error) {
-	const expected = 32
-	key := make([]byte, expected)
+	key := make([]byte, utils.KeyLen)
 
 	fs := afero.NewOsFs()
 	file, err := fs.Open(plotPath)
@@ -302,8 +301,8 @@ func GetKey(plotPath string) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("cannot read plot: %w", err)
 	}
-	if read != expected {
-		return nil, fmt.Errorf("expected to read %d bytes, read %d", expected, read)
+	if read != utils.KeyLen {
+		return nil, fmt.Errorf("expected to read %d bytes, read %d", utils.KeyLen, read)
 	}
 
 	return key, nil
@@ -312,34 +311,49 @@ func GetKey(plotPath string) ([]byte, error) {
 // getLastTableIndexAndPositions returns the index, start, and end of the
 // last table that got successfully plotted.
 func getLastTableIndexAndPositions(file afero.File) (int, int, int, error) {
+	start := int64(len(plotHeader) + utils.KeyLen + 1)
+
 	tableIndexBytes := make([]byte, 1)
-	if _, err := file.ReadAt(tableIndexBytes, 53); err != nil {
+	read, err := file.ReadAt(tableIndexBytes, start)
+	if err != nil {
 		return 0, 0, 0, err
 	}
+
 	tableStartBytes := make([]byte, 8)
-	if _, err := file.ReadAt(tableStartBytes, 54); err != nil {
+	more, err := file.ReadAt(tableStartBytes, start+int64(read))
+	if err != nil {
 		return 0, 0, 0, err
 	}
+	read += more
+
 	tableEndBytes := make([]byte, 8)
-	if _, err := file.ReadAt(tableEndBytes, 62); err != nil {
+	if _, err := file.ReadAt(tableEndBytes, start+int64(read)); err != nil {
 		return 0, 0, 0, err
 	}
+
 	return int(bits.BytesToUint64(tableIndexBytes, 1)),
 		int(bits.BytesToUint64(tableStartBytes, 64)),
 		int(bits.BytesToUint64(tableEndBytes, 64)),
 		nil
 }
 
-func updateLastTableIndexAndPositions(file afero.File, index, start, end int) error {
+func updateLastTableIndexAndPositions(file afero.File, index, tableStart, tableEnd int) error {
+	start := int64(len(plotHeader) + utils.KeyLen + 1)
+
 	tableIndexBytes := bits.Uint64ToBytes(uint64(index), 1)
-	if _, err := file.WriteAt(tableIndexBytes, 53); err != nil {
+	wrote, err := file.WriteAt(tableIndexBytes, start)
+	if err != nil {
 		return err
 	}
-	tableStartBytes := bits.Uint64ToBytes(uint64(start), 64)
-	if _, err := file.WriteAt(tableStartBytes, 54); err != nil {
+
+	tableStartBytes := bits.Uint64ToBytes(uint64(tableStart), 64)
+	more, err := file.WriteAt(tableStartBytes, start+int64(wrote))
+	if err != nil {
 		return err
 	}
-	tableEndBytes := bits.Uint64ToBytes(uint64(end), 64)
-	_, err := file.WriteAt(tableEndBytes, 62)
+	wrote += more
+
+	tableEndBytes := bits.Uint64ToBytes(uint64(tableEnd), 64)
+	_, err = file.WriteAt(tableEndBytes, start+int64(wrote))
 	return err
 }
