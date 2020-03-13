@@ -31,12 +31,12 @@ because none exists for the provided challenge. If so, try with a different chal
 ```
 Once we find a proof, we can reproduce the proof retrieval by using the persisted random challenge:
 ```
-./bin/prover -c $(cat .random_challenge) > .proof
+./bin/prover -c "$(cat .random_challenge)" > .proof
 ```
 
 Now that we have also persisted the proof, we can verify it:
 ```
-./bin/verifier -key .seed -p $(cat .proof) -c $(cat .random_challenge)
+./bin/verifier -key .seed -p $(cat .proof) -c "$(cat .random_challenge)"
 ```
 
 ## Contribute
