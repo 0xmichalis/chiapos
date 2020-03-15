@@ -30,7 +30,7 @@ func main() {
 		h.Write(challenge)
 		challenge = h.Sum(nil)
 		// fmt.Printf("Using random challenge %x\n", challenge)
-		if err := ioutil.WriteFile(".random_challenge", challenge, 0777); err != nil {
+		if err := ioutil.WriteFile(".random_challenge", challenge, 0600); err != nil {
 			fmt.Printf("Cannot persist random challenge: %v\n", err)
 			os.Exit(1)
 		}
