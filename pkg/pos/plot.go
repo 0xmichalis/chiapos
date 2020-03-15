@@ -4,15 +4,19 @@ import (
 	"os"
 
 	"github.com/spf13/afero"
+
+	fsutil "github.com/kargakis/chiapos/pkg/utils/fs"
 )
 
 // PlotDisk is the main function that handles executing all the different
 // steps required to plot a disk.
-func PlotDisk(filename string, k, availableMemory int, id []byte, retry bool) (int, error) {
-	fs := afero.NewOsFs()
+func PlotDisk(filename, fsType string, k, availableMemory int, id []byte, retry bool) (int, error) {
+	fs, err := fsutil.GetFs(fsType)
+	if err != nil {
+		return 0, err
+	}
 
 	var file afero.File
-	var err error
 	if retry {
 		file, err = fs.OpenFile(filename, os.O_RDWR, 0)
 	} else {

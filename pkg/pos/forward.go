@@ -52,7 +52,7 @@ func ForwardPropagate(fs afero.Fs, file afero.File, k, availableMemory int, id [
 		if err := updateLastTableIndexAndPositions(file, 1, headerLen+1, wrote+headerLen+1); err != nil {
 			return wrote, err
 		}
-		fmt.Printf("F1 calculations finished in %v (wrote %s)\n", time.Since(start), utils.PrettySize(wrote))
+		fmt.Printf("F1 calculations finished in %v (wrote %s)\n", time.Since(start), utils.PrettySize(float64(wrote)))
 	}
 
 	fx, err := NewFx(k, id)
@@ -92,7 +92,7 @@ func ForwardPropagate(fs afero.Fs, file afero.File, k, availableMemory int, id [
 		if err := updateLastTableIndexAndPositions(file, t, previousStart, previousStart+tWrote); err != nil {
 			return wrote, err
 		}
-		fmt.Printf("F%d calculations finished in %v (wrote %s)\n", t, time.Since(start), utils.PrettySize(tWrote))
+		fmt.Printf("F%d calculations finished in %v (wrote %s)\n", t, time.Since(start), utils.PrettySize(float64(tWrote)))
 	}
 
 	return wrote, nil

@@ -61,7 +61,7 @@ func Checkpoint(file afero.File, k int) (int, error) {
 	if err := updateLastTableIndexAndPositions(file, 8, end+1, end+1+wrote); err != nil {
 		return wrote, err
 	}
-	fmt.Printf("Finished checkpointing (wrote %s)\n", utils.PrettySize(wrote))
+	fmt.Printf("Finished checkpointing (wrote %s)\n", utils.PrettySize(float64(wrote)))
 
 	return wrote, nil
 }

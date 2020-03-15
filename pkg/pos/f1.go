@@ -10,7 +10,7 @@ import (
 	"github.com/kargakis/chiapos/pkg/utils"
 
 	"github.com/kargakis/chiapos/pkg/parameters"
-	mybits "github.com/kargakis/chiapos/pkg/utils/bits"
+	bitsutil "github.com/kargakis/chiapos/pkg/utils/bits"
 )
 
 const (
@@ -76,14 +76,14 @@ func (f *F1) CalculateOne(x uint64) uint64 {
 // in comparison to the naive approach (CalculateOne). Figure
 // out why.
 func (f *F1) Calculate(x uint64) [][]byte {
-	cipherBytes := mybits.ToBytes(f.k * kBlockSizeBits)
+	cipherBytes := bitsutil.ToBytes(f.k * kBlockSizeBits)
 	ciphertext := make([]byte, cipherBytes)
 	var index, start, end int
 
 	for cipherBytes > end {
 		start = index * aes.BlockSize % (cipherBytes + 1)
 		end = ((index + 1) * aes.BlockSize) % (cipherBytes + 1)
-		counterBytes := mybits.Uint64ToBytes(x, kBlockSizeBits)
+		counterBytes := bitsutil.Uint64ToBytes(x, kBlockSizeBits)
 		f.key.Encrypt(ciphertext[start:end], counterBytes)
 		x++
 		index++
@@ -94,7 +94,7 @@ func (f *F1) Calculate(x uint64) [][]byte {
 		left, right []byte
 		xIndex      uint64
 		leftSize    int
-		needsTrunc  = mybits.ToBytes(f.k) != f.k/8
+		needsTrunc  = bitsutil.ToBytes(f.k) != f.k/8
 	)
 
 	// slice the ciphertext properly to get back all the f(x)s
@@ -118,7 +118,7 @@ func (f *F1) Calculate(x uint64) [][]byte {
 				leftSize = 0
 			}
 			outputs = append(outputs, left)
-			extended := mybits.Uint64ToBytes((x+xIndex)%parameters.ParamM, parameters.ParamEXT)
+			extended := bitsutil.Uint64ToBytes((x+xIndex)%parameters.ParamM, parameters.ParamEXT)
 			// TODO: Similar to the lb append above, this is also wrong.
 			outputs[xIndex] = append(outputs[xIndex], extended...)
 			xIndex++

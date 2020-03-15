@@ -101,20 +101,20 @@ func bToMb(b uint64) uint64 {
 }
 
 // PrettySize returns a human-readable representation of disk size.
-func PrettySize(size int) string {
+func PrettySize(size float64) string {
 	switch c := class(size); c {
 	case 0: // bytes
-		return fmt.Sprintf("%d B", size)
+		return fmt.Sprintf("%.0f B", size)
 	case 1: // kilobytes
-		return fmt.Sprintf("%d KB", size/1024)
+		return fmt.Sprintf("%.0f KB", size/1024)
 	case 2: // megabytes
-		return fmt.Sprintf("%d MB", size/(1024*1024))
+		return fmt.Sprintf("%.0f MB", size/(1024*1024))
 	default: // gigabytes
-		return fmt.Sprintf("%d GB", size/(1024*1024*1024))
+		return fmt.Sprintf("%.1f GB", size/(1024*1024*1024))
 	}
 }
 
-func class(size int) int {
+func class(size float64) int {
 	if size < 1024 {
 		return 0
 	}

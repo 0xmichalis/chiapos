@@ -5,12 +5,12 @@ import (
 	"math/bits"
 	"testing"
 
-	mybits "github.com/kargakis/chiapos/pkg/utils/bits"
+	bitsutil "github.com/kargakis/chiapos/pkg/utils/bits"
 )
 
 func TestUint64ToBytes(t *testing.T) {
 	var n uint64 = 1000
-	nBytes := mybits.Uint64ToBytes(n, 15)
+	nBytes := bitsutil.Uint64ToBytes(n, 15)
 	bigN := new(big.Int).SetBytes(nBytes)
 	if bigN.Uint64() != n {
 		t.Errorf("expected big.Int(n) to be %d, got %d", n, bigN.Uint64())
@@ -26,7 +26,7 @@ func TestBytesToUint64(t *testing.T) {
 		nBytes[i] = bigNBytes[i-(8-len(bigNBytes))]
 	}
 
-	n := mybits.BytesToUint64(nBytes, 64)
+	n := bitsutil.BytesToUint64(nBytes, 64)
 	if bigN.Uint64() != n {
 		t.Errorf("expected n to be %d, got %d", bigN.Uint64(), n)
 	}
@@ -54,7 +54,7 @@ func TestIsAtMostKBits(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		got := mybits.IsAtMostKBits(tt.x, tt.k)
+		got := bitsutil.IsAtMostKBits(tt.x, tt.k)
 		if got != tt.expect {
 			t.Errorf("%s: expected %t, got %t (bit length: %d)", tt.name, tt.expect, got, bits.Len64(tt.x))
 		}
@@ -80,7 +80,7 @@ func TestNormalise(t *testing.T) {
 	}
 
 	for i, tt := range tests {
-		got := mybits.Normalise(tt.x, tt.k)
+		got := bitsutil.Normalise(tt.x, tt.k)
 		if got != tt.expect {
 			t.Errorf("tc #%d: expected %d (bit length: %d), got %d (bit length: %d)", i+1, tt.expect, bits.Len64(tt.expect), got, bits.Len64(got))
 		}

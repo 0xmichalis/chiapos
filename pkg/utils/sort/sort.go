@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/afero"
 
 	"github.com/kargakis/chiapos/pkg/serialize"
-	mybits "github.com/kargakis/chiapos/pkg/utils/bits"
+	bitsutil "github.com/kargakis/chiapos/pkg/utils/bits"
 )
 
 var buckets = make(map[string][]*serialize.Entry)
@@ -18,7 +18,7 @@ var buckets = make(map[string][]*serialize.Entry)
 // entry.
 func bucketIndex(entry uint64, k int) string {
 	// Keep the 8 most significant bits
-	bitRepresentation := fmt.Sprintf("%08b", mybits.Uint64ToBytes(entry, k)[:1])
+	bitRepresentation := fmt.Sprintf("%08b", bitsutil.Uint64ToBytes(entry, k)[:1])
 	// Drop [, ], and the 4 last significant bits
 	return bitRepresentation[1 : len(bitRepresentation)/2]
 }

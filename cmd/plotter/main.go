@@ -12,12 +12,14 @@ import (
 
 	"github.com/kargakis/chiapos/pkg/pos"
 	"github.com/kargakis/chiapos/pkg/utils"
+	fsutil "github.com/kargakis/chiapos/pkg/utils/fs"
 )
 
 var (
 	retry    = flag.Bool("retry", false, "If set to true, try to restore from a pre-existing plot")
 	k        = flag.Int("k", 18, "Storage parameter")
-	plotPath = flag.String("f", "plot.dat", "Final path to the plot")
+	plotPath = flag.String("f", "plot.dat", "Path to the plot")
+	fsType   = flag.String("fs", fsutil.OsType, "Filesystem type")
 	keyPath  = flag.String("key", "", "Path to key to be used as a plot seed")
 	availMem = flag.Int("m", 5*1024*1024*1024, "Max memory to use when plotting. Defaults to all OS available memory when set to zero.")
 )
@@ -85,10 +87,10 @@ func main() {
 	go gc()
 
 	plotStart := time.Now()
-	wrote, err := pos.PlotDisk(*plotPath, *k, *availMem, key[:], *retry)
+	wrote, err := pos.PlotDisk(*plotPath, *fsType, *k, *availMem, key[:], *retry)
 	if err != nil {
 		fmt.Printf("cannot write plot: %v\n", err)
 		os.Exit(1)
 	}
-	fmt.Printf("Plotting: OK (Wrote %v in %v)\n", utils.PrettySize(wrote), time.Since(plotStart))
+	fmt.Printf("Plotting: OK (Wrote %v in %v)\n", utils.PrettySize(float64(wrote)), time.Since(plotStart))
 }

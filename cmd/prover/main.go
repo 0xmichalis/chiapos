@@ -9,11 +9,13 @@ import (
 	"os"
 
 	"github.com/kargakis/chiapos/pkg/pos"
+	fsutil "github.com/kargakis/chiapos/pkg/utils/fs"
 )
 
 var (
 	c        = flag.String("c", "", "Challenge to use for the space proof")
-	plotPath = flag.String("f", "plot.dat", "Final path to the plot")
+	plotPath = flag.String("f", "plot.dat", "Path to the plot")
+	fsType   = flag.String("fs", fsutil.OsType, "Filesystem type")
 )
 
 func main() {
@@ -40,7 +42,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	proof, err := pos.Prove(*plotPath, challenge)
+	proof, err := pos.Prove(*plotPath, *fsType, challenge)
 	if err != nil {
 		fmt.Printf("Cannot read plot: %v\n", err)
 		os.Exit(1)

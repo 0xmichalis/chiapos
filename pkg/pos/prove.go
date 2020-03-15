@@ -12,7 +12,8 @@ import (
 
 	"github.com/kargakis/chiapos/pkg/serialize"
 	"github.com/kargakis/chiapos/pkg/utils"
-	mybits "github.com/kargakis/chiapos/pkg/utils/bits"
+	bitsutil "github.com/kargakis/chiapos/pkg/utils/bits"
+	fsutil "github.com/kargakis/chiapos/pkg/utils/fs"
 )
 
 type SpaceProof []uint64
@@ -30,8 +31,11 @@ func (sp SpaceProof) String() string {
 
 // Prove returns a space proof from the provided plot using the
 // provided challenge.
-func Prove(plotPath string, challenge []byte) (SpaceProof, error) {
-	fs := afero.NewOsFs()
+func Prove(plotPath, fsType string, challenge []byte) (SpaceProof, error) {
+	fs, err := fsutil.GetFs(fsType)
+	if err != nil {
+		return nil, err
+	}
 	file, err := fs.Open(plotPath)
 	if err != nil {
 		return nil, fmt.Errorf("cannot read plot: %w", err)
@@ -116,7 +120,7 @@ func getK(file afero.File) (int, error) {
 	if _, err := file.ReadAt(kBytes, int64(len(plotHeader)+utils.KeyLen)); err != nil {
 		return 0, err
 	}
-	return int(mybits.BytesToUint64(kBytes, 1)), nil
+	return int(bitsutil.BytesToUint64(kBytes, 1)), nil
 }
 
 func loadTable(file afero.File, start, k int) ([]*serialize.Entry, error) {
