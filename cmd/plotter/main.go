@@ -77,7 +77,9 @@ func main() {
 		}
 		*availMem = int(si.Freeram)
 	}
-	fmt.Printf("Available memory: %dMB\n", *availMem/(1024*1024))
+	// TODO: Re-enable when sort on disk is finalized
+	// https://github.com/kargakis/chiapos/issues/5
+	// fmt.Printf("Available memory: %dMB\n", *availMem/(1024*1024))
 
 	// run GC manually to flush unused memory as quickly as possible
 	go gc()
