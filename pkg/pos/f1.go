@@ -7,9 +7,8 @@ import (
 	"math"
 	"math/big"
 
-	"github.com/kargakis/chiapos/pkg/utils"
-
 	"github.com/kargakis/chiapos/pkg/parameters"
+	"github.com/kargakis/chiapos/pkg/utils"
 	bitsutil "github.com/kargakis/chiapos/pkg/utils/bits"
 )
 
