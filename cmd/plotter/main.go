@@ -71,7 +71,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if *availMem == 0 {
+	if *availMem == 0 && runtime.GOOS != "windows" {
 		si := &syscall.Sysinfo_t{}
 		if err := syscall.Sysinfo(si); err != nil {
 			fmt.Printf("cannot read system info to get available memory: %v", err)
