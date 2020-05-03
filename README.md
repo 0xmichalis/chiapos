@@ -1,5 +1,7 @@
 # Proof of Space
 
+![](assets/golang-chia.png)
+
 This is an alternative implementation of the [Chia](https://www.chia.net/) Proof of Space algorithm.
 If you are into Golang and think Proofs of Space sounds cool, feel free to contribute!
 
@@ -58,3 +60,8 @@ make verify
 ```
 make bench
 ```
+
+### Aknowledgements
+
+* btcsuite (for the logo and high code standards)
+
