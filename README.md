@@ -61,7 +61,7 @@ make verify
 make bench
 ```
 
-### Acknowledgements
+## Acknowledgements
 
 * btcsuite (for the logo and high code standards)
 
