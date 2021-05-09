@@ -5,7 +5,7 @@ import (
 	"math/bits"
 	"testing"
 
-	bitsutil "github.com/kargakis/chiapos/pkg/utils/bits"
+	bitsutil "github.com/skycoinsynth/chiapos-go/pkg/utils/bits"
 )
 
 func TestUint64ToBytes(t *testing.T) {

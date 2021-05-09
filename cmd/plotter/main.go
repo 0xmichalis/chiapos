@@ -9,9 +9,9 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/kargakis/chiapos/pkg/pos"
-	"github.com/kargakis/chiapos/pkg/utils"
-	fsutil "github.com/kargakis/chiapos/pkg/utils/fs"
+	"github.com/skycoinsynth/chiapos-go/pkg/pos"
+	"github.com/skycoinsynth/chiapos-go/pkg/utils"
+	fsutil "github.com/skycoinsynth/chiapos-go/pkg/utils/fs"
 	"github.com/shirou/gopsutil/v3/mem"
 )
 
@@ -80,7 +80,7 @@ func main() {
 	}
 
 	// TODO: Re-enable when sort on disk is finalized
-	// https://github.com/kargakis/chiapos/issues/5
+	// https://github.com/skycoinsynth/chiapos-go/issues/5
 	// fmt.Printf("Available memory: %dMB\n", *availMem/(1024*1024))
 
 	// run GC manually to flush unused memory as quickly as possible

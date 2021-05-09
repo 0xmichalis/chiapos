@@ -7,9 +7,9 @@ import (
 
 	"github.com/spf13/afero"
 
-	"github.com/kargakis/chiapos/pkg/parameters"
-	"github.com/kargakis/chiapos/pkg/serialize"
-	"github.com/kargakis/chiapos/pkg/utils"
+	"github.com/skycoinsynth/chiapos-go/pkg/parameters"
+	"github.com/skycoinsynth/chiapos-go/pkg/serialize"
+	"github.com/skycoinsynth/chiapos-go/pkg/utils"
 )
 
 // Checkpoint reads the last table in the plot and creates a new

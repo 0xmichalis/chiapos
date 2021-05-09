@@ -5,9 +5,9 @@ import (
 	"crypto/cipher"
 	"math/big"
 
-	"github.com/kargakis/chiapos/pkg/parameters"
-	"github.com/kargakis/chiapos/pkg/serialize"
-	"github.com/kargakis/chiapos/pkg/utils"
+	"github.com/skycoinsynth/chiapos-go/pkg/parameters"
+	"github.com/skycoinsynth/chiapos-go/pkg/serialize"
+	"github.com/skycoinsynth/chiapos-go/pkg/utils"
 )
 
 // At is a high-level hash function that calls AES on its inputs.

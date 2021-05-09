@@ -8,7 +8,7 @@ import (
 
 	"github.com/spf13/afero"
 
-	"github.com/kargakis/chiapos/pkg/serialize"
+	"github.com/skycoinsynth/chiapos-go/pkg/serialize"
 )
 
 // OnDisk performs sorting on the given file on disk, given begin which
@@ -17,7 +17,7 @@ import (
 func OnDisk(file afero.File, fs afero.Fs, begin, tableSize, availableMemory, k, t int) error {
 	entryLen := serialize.EntrySize(k, t)
 
-	// TODO: Implement sort on disk (https://github.com/kargakis/chiapos/issues/5)
+	// TODO: Implement sort on disk (https://github.com/skycoinsynth/chiapos-go/issues/5)
 	return sortInMemory(file, begin, entryLen, k, t)
 }
 

@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/afero"
 
-	fsutil "github.com/kargakis/chiapos/pkg/utils/fs"
+	fsutil "github.com/skycoinsynth/chiapos-go/pkg/utils/fs"
 )
 
 // PlotDisk is the main function that handles executing all the different

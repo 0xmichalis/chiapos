@@ -3,8 +3,8 @@ package pos
 import (
 	"math"
 
-	"github.com/kargakis/chiapos/pkg/parameters"
-	"github.com/kargakis/chiapos/pkg/serialize"
+	"github.com/skycoinsynth/chiapos-go/pkg/parameters"
+	"github.com/skycoinsynth/chiapos-go/pkg/serialize"
 )
 
 func init() {

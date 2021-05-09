@@ -3,7 +3,7 @@ package pos
 import (
 	"math/big"
 
-	"github.com/kargakis/chiapos/pkg/utils"
+	"github.com/skycoinsynth/chiapos-go/pkg/utils"
 )
 
 // Collate collates left and right inputs into outputs for the next table.

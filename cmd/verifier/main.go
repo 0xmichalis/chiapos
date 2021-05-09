@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/kargakis/chiapos/pkg/pos"
-	"github.com/kargakis/chiapos/pkg/utils"
+	"github.com/skycoinsynth/chiapos-go/pkg/pos"
+	"github.com/skycoinsynth/chiapos-go/pkg/utils"
 )
 
 var (
