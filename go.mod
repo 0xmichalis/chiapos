@@ -1,4 +1,4 @@
-module github.com/kargakis/chiapos
+module github.com/skycoinsynth/chiapos-go
 
 go 1.13
 
