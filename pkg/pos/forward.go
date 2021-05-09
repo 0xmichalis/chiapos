@@ -10,11 +10,11 @@ import (
 
 	"github.com/spf13/afero"
 
-	"github.com/kargakis/chiapos/pkg/parameters"
-	"github.com/kargakis/chiapos/pkg/serialize"
-	"github.com/kargakis/chiapos/pkg/utils"
-	"github.com/kargakis/chiapos/pkg/utils/bits"
-	"github.com/kargakis/chiapos/pkg/utils/sort"
+	"github.com/skycoinsynth/chiapos-go/pkg/parameters"
+	"github.com/skycoinsynth/chiapos-go/pkg/serialize"
+	"github.com/skycoinsynth/chiapos-go/pkg/utils"
+	"github.com/skycoinsynth/chiapos-go/pkg/utils/bits"
+	"github.com/skycoinsynth/chiapos-go/pkg/utils/sort"
 )
 
 // ForwardPropagate is Phase 1 of the plotter. During this phase, all of the tables,

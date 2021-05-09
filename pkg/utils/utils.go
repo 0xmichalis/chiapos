@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/kargakis/chiapos/pkg/parameters"
+	"github.com/skycoinsynth/chiapos-go/pkg/parameters"
 )
 
 // Concat performs zero-padded concatenation of the provided xs.

@@ -11,8 +11,8 @@ import (
 
 	"github.com/spf13/afero"
 
-	"github.com/kargakis/chiapos/pkg/parameters"
-	bitsutil "github.com/kargakis/chiapos/pkg/utils/bits"
+	"github.com/skycoinsynth/chiapos-go/pkg/parameters"
+	bitsutil "github.com/skycoinsynth/chiapos-go/pkg/utils/bits"
 )
 
 const (

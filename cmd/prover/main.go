@@ -8,8 +8,8 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/kargakis/chiapos/pkg/pos"
-	fsutil "github.com/kargakis/chiapos/pkg/utils/fs"
+	"github.com/skycoinsynth/chiapos-go/pkg/pos"
+	fsutil "github.com/skycoinsynth/chiapos-go/pkg/utils/fs"
 )
 
 var (

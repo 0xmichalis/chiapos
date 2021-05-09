@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/kargakis/chiapos/pkg/parameters"
-	"github.com/kargakis/chiapos/pkg/rraes"
+	"github.com/skycoinsynth/chiapos-go/pkg/parameters"
+	"github.com/skycoinsynth/chiapos-go/pkg/rraes"
 )
 
 type Fx struct {

@@ -7,8 +7,8 @@ import (
 	"math/big"
 	"math/bits"
 
-	"github.com/kargakis/chiapos/pkg/serialize"
-	"github.com/kargakis/chiapos/pkg/utils"
+	"github.com/skycoinsynth/chiapos-go/pkg/serialize"
+	"github.com/skycoinsynth/chiapos-go/pkg/utils"
 )
 
 // Verify verifies the provided proof given the challenge, seed, and k.

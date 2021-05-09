@@ -7,12 +7,12 @@ import (
 	"io/ioutil"
 	"os"
 	"runtime"
-	"syscall"
 	"time"
 
-	"github.com/kargakis/chiapos/pkg/pos"
-	"github.com/kargakis/chiapos/pkg/utils"
-	fsutil "github.com/kargakis/chiapos/pkg/utils/fs"
+	"github.com/skycoinsynth/chiapos-go/pkg/pos"
+	"github.com/skycoinsynth/chiapos-go/pkg/utils"
+	fsutil "github.com/skycoinsynth/chiapos-go/pkg/utils/fs"
+	"github.com/shirou/gopsutil/v3/mem"
 )
 
 var (
@@ -71,16 +71,16 @@ func main() {
 		os.Exit(1)
 	}
 
-	if *availMem == 0 && runtime.GOOS != "windows" {
-		si := &syscall.Sysinfo_t{}
-		if err := syscall.Sysinfo(si); err != nil {
-			fmt.Printf("cannot read system info to get available memory: %v", err)
-			os.Exit(1)
+	if *availMem == 0 {
+		v, err := mem.VirtualMemory()
+		if err != nil {
+			fmt.Printf("cannot read system info to get available memory : %v", err)
 		}
-		*availMem = int(si.Freeram)
+		*availMem = int(v.Free)
 	}
+
 	// TODO: Re-enable when sort on disk is finalized
-	// https://github.com/kargakis/chiapos/issues/5
+	// https://github.com/skycoinsynth/chiapos-go/issues/5
 	// fmt.Printf("Available memory: %dMB\n", *availMem/(1024*1024))
 
 	// run GC manually to flush unused memory as quickly as possible

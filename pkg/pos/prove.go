@@ -10,10 +10,10 @@ import (
 
 	"github.com/spf13/afero"
 
-	"github.com/kargakis/chiapos/pkg/serialize"
-	"github.com/kargakis/chiapos/pkg/utils"
-	bitsutil "github.com/kargakis/chiapos/pkg/utils/bits"
-	fsutil "github.com/kargakis/chiapos/pkg/utils/fs"
+	"github.com/skycoinsynth/chiapos-go/pkg/serialize"
+	"github.com/skycoinsynth/chiapos-go/pkg/utils"
+	bitsutil "github.com/skycoinsynth/chiapos-go/pkg/utils/bits"
+	fsutil "github.com/skycoinsynth/chiapos-go/pkg/utils/fs"
 )
 
 type SpaceProof []uint64

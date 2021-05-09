@@ -7,9 +7,9 @@ import (
 	"math"
 	"math/big"
 
-	"github.com/kargakis/chiapos/pkg/parameters"
-	"github.com/kargakis/chiapos/pkg/utils"
-	bitsutil "github.com/kargakis/chiapos/pkg/utils/bits"
+	"github.com/skycoinsynth/chiapos-go/pkg/parameters"
+	"github.com/skycoinsynth/chiapos-go/pkg/utils"
+	bitsutil "github.com/skycoinsynth/chiapos-go/pkg/utils/bits"
 )
 
 const (
