@@ -15,7 +15,7 @@ import (
 var (
 	c       = flag.String("c", "", "Challenge to use for the space proof")
 	k       = flag.Int("k", 18, "Space parameter")
-	keyPath = flag.String("key", "", "Path to the plot seed")
+	keyPath = flag.String("seed", "", "Path to the plot seed")
 	proof   = flag.String("p", "", "Space proof")
 )
 

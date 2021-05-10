@@ -9,10 +9,10 @@ import (
 	"runtime"
 	"time"
 
+	"github.com/shirou/gopsutil/v3/mem"
 	"github.com/skycoinsynth/chiapos-go/pkg/pos"
 	"github.com/skycoinsynth/chiapos-go/pkg/utils"
 	fsutil "github.com/skycoinsynth/chiapos-go/pkg/utils/fs"
-	"github.com/shirou/gopsutil/v3/mem"
 )
 
 var (
@@ -20,7 +20,7 @@ var (
 	k        = flag.Int("k", 18, "Storage parameter")
 	plotPath = flag.String("f", "plot.dat", "Path to the plot")
 	fsType   = flag.String("fs", fsutil.OsType, "Filesystem type")
-	keyPath  = flag.String("key", "", "Path to key to be used as a plot seed")
+	keyPath  = flag.String("seed", "", "Path to key to be used as a plot seed")
 	availMem = flag.Int("m", 5*1024*1024*1024, "Max memory to use when plotting. Defaults to all OS available memory when set to zero.")
 )
 
